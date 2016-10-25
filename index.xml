@@ -2,19 +2,19 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>tizpuppi</title>
-    <link>http://tizpuppi.github.io/</link>
+    <link>https://tizpuppi.github.io/</link>
     <description>Recent content on tizpuppi</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 15 Oct 2016 09:00:00 +0200</lastBuildDate>
-    <atom:link href="http://tizpuppi.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://tizpuppi.github.io/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Tour Of Elm - Part One</title>
-      <link>http://tizpuppi.github.io/blog/tour_of_elm-part_one/</link>
+      <link>https://tizpuppi.github.io/blog/tour_of_elm-part_one/</link>
       <pubDate>Sat, 15 Oct 2016 09:00:00 +0200</pubDate>
       
-      <guid>http://tizpuppi.github.io/blog/tour_of_elm-part_one/</guid>
+      <guid>https://tizpuppi.github.io/blog/tour_of_elm-part_one/</guid>
       <description>
 
 &lt;p&gt;I Recently played with the &lt;a href=&#34;http://elm-lang.org/&#34;&gt;Elm&lt;/a&gt; programming language and I really enjoyed its elegance and cleanness. Elm is a strongly typed functional language, largely inspired by Haskell, that compiles to javascript. Code written in Elm usually follows a simple pattern called &lt;a href=&#34;https://guide.elm-lang.org/architecture/&#34;&gt;Elm architecture&lt;/a&gt; that helps to nicely structure your web application and that has inspired the Redux library for ReactJs.&lt;/p&gt;
@@ -233,10 +233,10 @@ view model =
     
     <item>
       <title></title>
-      <link>http://tizpuppi.github.io/about/</link>
+      <link>https://tizpuppi.github.io/about/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://tizpuppi.github.io/about/</guid>
+      <guid>https://tizpuppi.github.io/about/</guid>
       <description>
 
 &lt;h1 id=&#34;about-me&#34;&gt;About me&lt;/h1&gt;

@@ -39,6 +39,8 @@
 
 &lt;p&gt;In the first part we want to display a simple page with info about an hero. This page will have an input field where the user can change the hero name and automatically reflect this change on the page subtitle. Here is a screenshot of desired behaviour.&lt;/p&gt;
 
+&lt;p&gt;&lt;img src=&#34;https://tizpuppi.github.io/images/HeroEditor.gif&#34; alt=&#34;Hero Editor Screenshot&#34; /&gt;&lt;/p&gt;
+
 &lt;p&gt;Let&amp;rsquo;s start with showing the complete code of an application where there is no interaction with users.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;module Main exposing (..)

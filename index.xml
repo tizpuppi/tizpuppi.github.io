@@ -6,8 +6,285 @@
     <description>Recent content on tizpuppi</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 15 Oct 2016 09:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Fri, 28 Oct 2016 09:00:00 +0200</lastBuildDate>
     <atom:link href="https://tizpuppi.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Tour Of Elm - Part Two</title>
+      <link>https://tizpuppi.github.io/blog/tour_of_elm-part_two/</link>
+      <pubDate>Fri, 28 Oct 2016 09:00:00 +0200</pubDate>
+      
+      <guid>https://tizpuppi.github.io/blog/tour_of_elm-part_two/</guid>
+      <description>
+
+&lt;h1 id=&#34;angular-2-tutorial-in-elm-part-2&#34;&gt;Angular 2 Tutorial in Elm - Part 2&lt;/h1&gt;
+
+&lt;h3 id=&#34;let-s-scale-multiple-heroes&#34;&gt;Let&amp;rsquo;s scale: multiple heroes&lt;/h3&gt;
+
+&lt;p&gt;We are ready to continue our journey of the angular 2 tutorial in Elm. We have touched a bit the Elm architecture in &lt;a href=&#34;https://tizpuppi.github.io/blog/tour_of_elm-part_one/&#34;&gt;previous post&lt;/a&gt; and now we are ready to build on it. We left the application at the point where there was one hero displayed on the page and we were able to nicely change its name.&lt;/p&gt;
+
+&lt;p&gt;Now it&amp;rsquo;s time to grow and we want to scale this feature on multiple heroes, showing a list of heroes among which we can choose, and changing its name once selected. Here you can see a screenshot of the desired behaviour:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://tizpuppi.github.io/images/HeroList.gif&#34; alt=&#34;Hero List Screenshot&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;As usual all code is available in the &lt;a href=&#34;https://github.com/tizpuppi/TourOfElm&#34;&gt;github&lt;/a&gt; repository: for this post you can refer to branch 02-HeroList.&lt;/p&gt;
+
+&lt;p&gt;We will build on top of the code we wrote for previous post.&lt;/p&gt;
+
+&lt;h6 id=&#34;model&#34;&gt;model&lt;/h6&gt;
+
+&lt;p&gt;Let&amp;rsquo;s start to refactor the model:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;-- MODEL
+
+
+type alias Hero =
+    { id : Int, name : String }
+
+
+heroes : List Hero
+heroes =
+    [ Hero 11 &amp;quot;Mr. Nice&amp;quot;
+    , Hero 12 &amp;quot;Narco&amp;quot;
+    , Hero 13 &amp;quot;Bombasto&amp;quot;
+    , Hero 14 &amp;quot;Celeritas&amp;quot;
+    , Hero 15 &amp;quot;Magneta&amp;quot;
+    , Hero 16 &amp;quot;RubberMan&amp;quot;
+    , Hero 17 &amp;quot;Dynama&amp;quot;
+    , Hero 18 &amp;quot;Dr IQ&amp;quot;
+    , Hero 19 &amp;quot;Magma&amp;quot;
+    , Hero 20 &amp;quot;Tornado&amp;quot;
+    ]
+
+
+type alias Model =
+    { selectedHeroId : Maybe Int, heroes : List Hero }
+
+
+initialModel : Model
+initialModel =
+    { selectedHeroId = Nothing, heroes = heroes }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Hero type alias doesn&amp;rsquo;t change from previous version, but now the Model type alias is defined as a record containing the id of the selected hero (if any) and a list of heroes (defined separately for sake of clarity).&lt;/p&gt;
+
+&lt;p&gt;In Elm, like in other functional languages List is a key data structure. Lists are iterable containers containing data of same type and are often used to transform data or perform computations over them: we&amp;rsquo;ll see later an example of this in action when transforming list of Heroes into list of Html objects.&lt;/p&gt;
+
+&lt;p&gt;The second interesting Elm feature is that there is no null value. This is quite a revolution if compared to javascript, and I tend to believe that this is one of Elm&amp;rsquo;s greatest feature.&lt;/p&gt;
+
+&lt;p&gt;Not having any null reference has some implications, like that if we want to describe the lack of value we have to explicitly describe it through a type. In Elm this is done using the &lt;strong&gt;Maybe&lt;/strong&gt; type.&lt;/p&gt;
+
+&lt;p&gt;Maybe is a container similar to a list. The only difference is that it can contain 0 or 1 value, while a list can contain 0 or more values of the same type. Being a container, Maybe is a parametric type: we can have Maybe Int, or Maybe String or Maybe WhatEverYouWant. Normally the parameter is denoted with lower case letter, like &lt;strong&gt;Maybe a&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Maybe a has two constructors: &lt;strong&gt;Nothing&lt;/strong&gt; that indicates the lack of value, and &lt;strong&gt;Just a&lt;/strong&gt;: for example &lt;em&gt;Just 5&lt;/em&gt; has type &lt;em&gt;Maybe Int&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;As showed in the code above, we use Maybe Int to describe the id of selected item (or lack of selection).&lt;/p&gt;
+
+&lt;h6 id=&#34;view&#34;&gt;view&lt;/h6&gt;
+
+&lt;p&gt;Let&amp;rsquo;s now have a look at the view:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;-- VIEW
+
+
+showDetail : Model -&amp;gt; Html Msg
+showDetail model =
+    case model.selectedHeroId of
+        Nothing -&amp;gt;
+            text &amp;quot;&amp;quot;
+
+        Just i -&amp;gt;
+            div []
+                [ h2 []
+                    [ text ((getHero i model.heroes).name ++ &amp;quot; details!&amp;quot;)
+                    ]
+                , div []
+                    [ label [] [ text (&amp;quot;id: &amp;quot; ++ toString i) ]
+                    ]
+                , div []
+                    [ label [] [ text &amp;quot;name: &amp;quot; ]
+                    , input
+                        [ value (getHero i model.heroes).name
+                        , placeholder &amp;quot;name&amp;quot;
+                        , onInput Change
+                        ]
+                        []
+                    ]
+                ]
+
+
+showList : Model -&amp;gt; List (Html Msg)
+showList model =
+    List.map
+        (\e -&amp;gt;
+            li
+                [ onClick (Select e)
+                , if isHeroSelected model.selectedHeroId e then
+                    (class &amp;quot;selected&amp;quot;)
+                  else
+                    class &amp;quot;&amp;quot;
+                ]
+                [ span [ class &amp;quot;badge&amp;quot; ] [ text (toString e.id) ], text e.name ]
+        )
+        model.heroes
+
+
+view : Model -&amp;gt; Html Msg
+view model =
+    body []
+        [ h1 [] [ text config.title ]
+        , h2 [] [ text &amp;quot;My Heroes&amp;quot; ]
+        , ul [ class &amp;quot;items&amp;quot; ] (showList model)
+        , showDetail model
+        ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we start reading from the last function (view), it&amp;rsquo;s pretty clear what this function does: it displays the title in a header, a sub-header, a list and some details.&lt;/p&gt;
+
+&lt;p&gt;Here we can learn another important lesson well stated in the Elm Architecture Guide:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;We do not think in terms of reusable components. Instead, we focus on reusable functions. It is a functional language after all!&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This is a pattern we will see through the whole tutorial: we will split our application by isolating small functions in modules. We prefer function composition over components assembling, especially when we are dealing conceptually with one subject (aka one model) like a list of heroes. Structuring an applications by means of reusable components is still possible to do in Elm, but this approach is suggested when each component is a really standalone piece with its own life (aka state or model in Elm terminology).&lt;/p&gt;
+
+&lt;p&gt;As anticipated earlier, in this snippet of code we can also see how List is used to transform data from Model to Html. List.map is an Elm core utility function that takes a function and a list and returns a new list with the function applied to every element of the original list. Here the functions is an anonymous function: syntax for anonymous functions is  &lt;code&gt;(\e -&amp;gt; ... )&lt;/code&gt; where &lt;code&gt;e&lt;/code&gt; is the input parameter and in this case represents an element of the original list.&lt;/p&gt;
+
+&lt;p&gt;This is one example of how functional languages can avoid using &lt;code&gt;for ...&lt;/code&gt; loop syntax making the language clearer. Mapping a function to a list is even more descriptive then a for loop!.&lt;/p&gt;
+
+&lt;p&gt;Another way of avoid for loops is by means of recursion. Let&amp;rsquo;s go to the update function to see it.&lt;/p&gt;
+
+&lt;h6 id=&#34;update&#34;&gt;update&lt;/h6&gt;
+
+&lt;p&gt;Here you can see the code for the update function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;-- UPDATE
+
+
+type Msg
+    = Change String
+    | Select Hero
+
+
+update : Msg -&amp;gt; Model -&amp;gt; Model
+update msg model =
+    case msg of
+        Change newName -&amp;gt;
+            case model.selectedHeroId of
+                Nothing -&amp;gt;
+                    model
+
+                Just i -&amp;gt;
+                    let
+                        h =
+                            getHero i model.heroes
+                    in
+                        { model | heroes = (replaceHero i (Hero h.id newName) model.heroes) }
+
+        Select hero -&amp;gt;
+            { model | selectedHeroId = Just hero.id }
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since now Msg type has two constructors (we can interact with our application by selecting an hero from the list and by changing its name), we have to handle both cases.
+Case for Change hero&amp;rsquo;s name hasn&amp;rsquo;t changed a lot. Model has been refactored so that we &amp;ldquo;update&amp;rdquo; the hero&amp;rsquo;s name when we have to change it. This is done by creating a new list (using the &lt;code&gt;replaceHero&lt;/code&gt; helping function).&lt;/p&gt;
+
+&lt;p&gt;We have to build a new list because data in Elm are immutable: once defined a value, we cannot change it. All we can do is to assign a variable to a new value like we do with heroes assigning it to a new list containing updated information.&lt;/p&gt;
+
+&lt;p&gt;Syntax &lt;code&gt;{ model | heroes = ... }&lt;/code&gt; is a syntactic sugar for &lt;code&gt;model = {selectedHeroId = mode.selectedHeroId, heroes = ... }&lt;/code&gt; and it does not change the value of the record in place.&lt;/p&gt;
+
+&lt;p&gt;Code for &lt;code&gt;Select&lt;/code&gt; hero is also very simple: just an assignment to &lt;code&gt;SelectedHeroId&lt;/code&gt; with &lt;code&gt;Just&lt;/code&gt; constructor (pun intended).&lt;/p&gt;
+
+&lt;p&gt;Through the code we saw some utility functions that helped in making the code more clear and concise. As we said earlier, factoring out small reusable functions is the key in having a nice Elm code that is easy to maintain and refactor.&lt;/p&gt;
+
+&lt;p&gt;Here you can see two of them that shows how recursion can be used to iterate over a list.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;-- UTILS
+
+
+replaceHero : Int -&amp;gt; Hero -&amp;gt; List Hero -&amp;gt; List Hero
+replaceHero i h hs =
+    case hs of
+        [] -&amp;gt;
+            hs
+
+        x :: xs -&amp;gt;
+            if i == x.id then
+                h :: xs
+            else
+                x :: (replaceHero i h xs)
+
+
+getHero : Int -&amp;gt; List Hero -&amp;gt; Hero
+getHero i heroes =
+    case heroes of
+        [] -&amp;gt;
+            Debug.crash &amp;quot;Should never go here&amp;quot;
+
+        x :: xs -&amp;gt;
+            if x.id == i then
+                x
+            else
+                getHero i xs
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;rsquo;s walk through the second one first. &lt;code&gt;getHero&lt;/code&gt; is a function that takes a hero id (Int) and a list of heroes and returns the hero object identified by the hero id we passed as first parameter.&lt;/p&gt;
+
+&lt;p&gt;Function body uses the &lt;code&gt;case&lt;/code&gt; syntax to &lt;strong&gt;pattern match&lt;/strong&gt; against the List constructors. This basically means that an Elm List can be constructed either like an empty list (&lt;code&gt;[]&lt;/code&gt;) or by attaching an element to a second list (&lt;code&gt;x :: xs&lt;/code&gt;). Pattern match allows to express a function differently depending on the pattern that is matched.&lt;/p&gt;
+
+&lt;p&gt;Looking at our function, we pattern match heroes against an empty list or against a list with at least one argument. Since the first case should never happen, we deliberately decide to make the application crash if matched. In the second case, we first check if the first element in the list (&lt;code&gt;x&lt;/code&gt;) is the element we were looking for. If yes we return it, otherwise we call recursively the same function on the rest of the list.&lt;/p&gt;
+
+&lt;p&gt;Recursion is used also in the first example where we recursively build the new list of heroes with the new hero replaced in place of the old one (if found).&lt;/p&gt;
+
+&lt;p&gt;It can take a while before thinking in terms of recursive problems becomes natural: we are so used to think in terms of loops! Thinking to a problem in terms of a similar, smaller and easier to solve problem usually represents a nice way to solve it, (even if it might be wired at the beginning).&lt;/p&gt;
+
+&lt;h3 id=&#34;second-take-home-about-elm&#34;&gt;Second take home about Elm&lt;/h3&gt;
+
+&lt;p&gt;A common topic in this post is about the possibility of missing data. Elm doesn&amp;rsquo;t have something like a null reference and what can be used to describe the lack of data is the &lt;code&gt;Maybe&lt;/code&gt; container. In this way we are forced to handle all cases explicitly, resulting in a much more reliable code.&lt;/p&gt;
+
+&lt;p&gt;This is why in the &lt;code&gt;getHero&lt;/code&gt; function we had to handle the code for empty list even if we are sure that the application will never call it. But what happens if we remove that branch?
+That is the error message we have from the compiler where we try to compile the code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;-- MISSING PATTERNS ---- \TourOfElm\src\Main.elm
+
+This `case` does not have branches for all possibilities.
+
+102|&amp;gt;    case heroes of
+103|&amp;gt;
+104|&amp;gt;        x :: xs -&amp;gt;
+105|&amp;gt;            if x.id == i then
+106|&amp;gt;                x
+107|&amp;gt;            else
+108|&amp;gt;                getHero i xs
+
+You need to account for the following values:
+
+    []
+
+Add a branch to cover this pattern!
+
+If you are seeing this error for the first time, check out these hints:
+&amp;lt;https://github.com/elm-lang/elm-compiler/blob/0.17.1/hints/missing-patterns.md&amp;gt;
+The recommendations about wildcard patterns and `Debug.crash` are important!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So we have to cover all possibilities. In this example, since we call the function on a selected hero, it doesn&amp;rsquo;s make sense to call this function with an &lt;code&gt;id&lt;/code&gt; that is not present in the list of heroes. Hence we call &lt;code&gt;Debug.crash&lt;/code&gt; to explicitly make crash the application in case of that code being called (something must have gone very bad somewhere and we better make the application crash right here instead of let it crash later).&lt;/p&gt;
+
+&lt;p&gt;Getting rid of null reference is a great improvement in comparison to javascript, given what its inventor &lt;a href=&#34;https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare&#34;&gt;thinks&lt;/a&gt; about it.&lt;/p&gt;
+
+&lt;p&gt;Those are some thoughts from Thomas Hoare, who introduced the Null reference in ALGOL language:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;I call it my billion-dollar mistake! At that time, I was designing the first comprehensive type system for references in an object-oriented language. My goal was to ensure that all use of references should be absolutely safe, with checking performed automatically by the compiler. But I couldn&amp;rsquo;t resist the temptation to put in a null reference, simply because it was so easy to implement. This has led to innumerable errors, vulnerabilities, and system crashes, which have probably caused a billion dollars of pain and damage in the last forty years. - Tony Hoare, inventor of ALGOL W.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+</description>
+    </item>
     
     <item>
       <title>Tour Of Elm - Part One</title>

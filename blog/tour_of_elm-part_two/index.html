@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Tour Of Elm - Part Two &middot; Tiziano Puppi</title>
+        <meta name="description" content="Hero List and Master/Detail view">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="generator" content="Hugo 0.16" />
+        <meta name="robots" content="index,follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link rel="stylesheet" href="https://tizpuppi.github.io/css/normalize.css">
+        <link rel="stylesheet" href="https://tizpuppi.github.io/css/highlight.css">
+        <link rel="stylesheet" href="https://tizpuppi.github.io/css/style.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,600,700,300&subset=latin,cyrillic-ext,latin-ext,cyrillic">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    </head>
+    <body>
+        
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-86298199-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+        <div id="wrapper">
+            <header class="site-header">
+                <div class="container">
+                    <div class="site-title-wrapper">
+                        
+                            <h1 class="site-title">
+                                <a title="tizpuppi" href="https://tizpuppi.github.io/">tizpuppi</a>
+                            </h1>
+                        
+                        <a class="button-square" href="https://tizpuppi.github.io/index.xml"><i class="fa fa-rss"></i></a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Github" title="Github" href="https://github.com/tizpuppi">
+                                <i class="fa fa-github-alt"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="LinkedIn" title="LinkedIn" href="https://www.linkedin.com/in/tizianopuppi">
+                                <i class="fa fa-linkedin"></i>
+                            </a>
+                        
+                        
+                    </div>
+
+                    <ul class="site-nav">
+                        
+    <li class="site-nav-item">
+        <a title="Blog" href="/">Blog</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="About" href="/about/">About</a>
+    </li>
+
+                    </ul>
+                </div>
+            </header>
+
+            <div id="container">
+
+
+<div class="container">
+    <article class="post-container" itemscope="" itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Tour Of Elm - Part Two</h1>
+    
+        <p class="post-description" itemprop="description">Hero List and Master/Detail view</p>
+    
+    <p class="post-date">
+        <span>Published <time datetime="2016-10-28" itemprop="datePublished">Fri, Oct 28, 2016</time></span>
+        <span>by</span>
+        <span itemscope="" itemprop="author" itemtype="http://schema.org/Person">
+            <span itemprop="name">
+                <a href="" itemprop="url" rel="author">Tiziano Puppi</a>
+            </span>
+        </span>
+    </p>
+</header>
+
+        <div class="post-content clearfix" itemprop="articleBody">
+    
+
+    
+
+<h1 id="angular-2-tutorial-in-elm-part-2">Angular 2 Tutorial in Elm - Part 2</h1>
+
+<h3 id="let-s-scale-multiple-heroes">Let&rsquo;s scale: multiple heroes</h3>
+
+<p>We are ready to continue our journey of the angular 2 tutorial in Elm. We have touched a bit the Elm architecture in <a href="/blog/tour_of_elm-part_one/">previous post</a> and now we are ready to build on it. We left the application at the point where there was one hero displayed on the page and we were able to nicely change its name.</p>
+
+<p>Now it&rsquo;s time to grow and we want to scale this feature on multiple heroes, showing a list of heroes among which we can choose, and changing its name once selected. Here you can see a screenshot of the desired behaviour:</p>
+
+<p><img src="/images/HeroList.gif" alt="Hero List Screenshot" /></p>
+
+<p>As usual all code is available in the <a href="https://github.com/tizpuppi/TourOfElm">github</a> repository: for this post you can refer to branch 02-HeroList.</p>
+
+<p>We will build on top of the code we wrote for previous post.</p>
+
+<h6 id="model">model</h6>
+
+<p>Let&rsquo;s start to refactor the model:</p>
+
+<pre><code class="language-elm">-- MODEL
+
+
+type alias Hero =
+    { id : Int, name : String }
+
+
+heroes : List Hero
+heroes =
+    [ Hero 11 &quot;Mr. Nice&quot;
+    , Hero 12 &quot;Narco&quot;
+    , Hero 13 &quot;Bombasto&quot;
+    , Hero 14 &quot;Celeritas&quot;
+    , Hero 15 &quot;Magneta&quot;
+    , Hero 16 &quot;RubberMan&quot;
+    , Hero 17 &quot;Dynama&quot;
+    , Hero 18 &quot;Dr IQ&quot;
+    , Hero 19 &quot;Magma&quot;
+    , Hero 20 &quot;Tornado&quot;
+    ]
+
+
+type alias Model =
+    { selectedHeroId : Maybe Int, heroes : List Hero }
+
+
+initialModel : Model
+initialModel =
+    { selectedHeroId = Nothing, heroes = heroes }
+</code></pre>
+
+<p>Hero type alias doesn&rsquo;t change from previous version, but now the Model type alias is defined as a record containing the id of the selected hero (if any) and a list of heroes (defined separately for sake of clarity).</p>
+
+<p>In Elm, like in other functional languages List is a key data structure. Lists are iterable containers containing data of same type and are often used to transform data or perform computations over them: we&rsquo;ll see later an example of this in action when transforming list of Heroes into list of Html objects.</p>
+
+<p>The second interesting Elm feature is that there is no null value. This is quite a revolution if compared to javascript, and I tend to believe that this is one of Elm&rsquo;s greatest feature.</p>
+
+<p>Not having any null reference has some implications, like that if we want to describe the lack of value we have to explicitly describe it through a type. In Elm this is done using the <strong>Maybe</strong> type.</p>
+
+<p>Maybe is a container similar to a list. The only difference is that it can contain 0 or 1 value, while a list can contain 0 or more values of the same type. Being a container, Maybe is a parametric type: we can have Maybe Int, or Maybe String or Maybe WhatEverYouWant. Normally the parameter is denoted with lower case letter, like <strong>Maybe a</strong>.</p>
+
+<p>Maybe a has two constructors: <strong>Nothing</strong> that indicates the lack of value, and <strong>Just a</strong>: for example <em>Just 5</em> has type <em>Maybe Int</em>.</p>
+
+<p>As showed in the code above, we use Maybe Int to describe the id of selected item (or lack of selection).</p>
+
+<h6 id="view">view</h6>
+
+<p>Let&rsquo;s now have a look at the view:</p>
+
+<pre><code class="language-elm">-- VIEW
+
+
+showDetail : Model -&gt; Html Msg
+showDetail model =
+    case model.selectedHeroId of
+        Nothing -&gt;
+            text &quot;&quot;
+
+        Just i -&gt;
+            div []
+                [ h2 []
+                    [ text ((getHero i model.heroes).name ++ &quot; details!&quot;)
+                    ]
+                , div []
+                    [ label [] [ text (&quot;id: &quot; ++ toString i) ]
+                    ]
+                , div []
+                    [ label [] [ text &quot;name: &quot; ]
+                    , input
+                        [ value (getHero i model.heroes).name
+                        , placeholder &quot;name&quot;
+                        , onInput Change
+                        ]
+                        []
+                    ]
+                ]
+
+
+showList : Model -&gt; List (Html Msg)
+showList model =
+    List.map
+        (\e -&gt;
+            li
+                [ onClick (Select e)
+                , if isHeroSelected model.selectedHeroId e then
+                    (class &quot;selected&quot;)
+                  else
+                    class &quot;&quot;
+                ]
+                [ span [ class &quot;badge&quot; ] [ text (toString e.id) ], text e.name ]
+        )
+        model.heroes
+
+
+view : Model -&gt; Html Msg
+view model =
+    body []
+        [ h1 [] [ text config.title ]
+        , h2 [] [ text &quot;My Heroes&quot; ]
+        , ul [ class &quot;items&quot; ] (showList model)
+        , showDetail model
+        ]
+</code></pre>
+
+<p>If we start reading from the last function (view), it&rsquo;s pretty clear what this function does: it displays the title in a header, a sub-header, a list and some details.</p>
+
+<p>Here we can learn another important lesson well stated in the Elm Architecture Guide:</p>
+
+<blockquote>
+<blockquote>
+<p>We do not think in terms of reusable components. Instead, we focus on reusable functions. It is a functional language after all!</p>
+</blockquote>
+</blockquote>
+
+<p>This is a pattern we will see through the whole tutorial: we will split our application by isolating small functions in modules. We prefer function composition over components assembling, especially when we are dealing conceptually with one subject (aka one model) like a list of heroes. Structuring an applications by means of reusable components is still possible to do in Elm, but this approach is suggested when each component is a really standalone piece with its own life (aka state or model in Elm terminology).</p>
+
+<p>As anticipated earlier, in this snippet of code we can also see how List is used to transform data from Model to Html. List.map is an Elm core utility function that takes a function and a list and returns a new list with the function applied to every element of the original list. Here the functions is an anonymous function: syntax for anonymous functions is  <code>(\e -&gt; ... )</code> where <code>e</code> is the input parameter and in this case represents an element of the original list.</p>
+
+<p>This is one example of how functional languages can avoid using <code>for ...</code> loop syntax making the language clearer. Mapping a function to a list is even more descriptive then a for loop!.</p>
+
+<p>Another way of avoid for loops is by means of recursion. Let&rsquo;s go to the update function to see it.</p>
+
+<h6 id="update">update</h6>
+
+<p>Here you can see the code for the update function:</p>
+
+<pre><code class="language-elm">-- UPDATE
+
+
+type Msg
+    = Change String
+    | Select Hero
+
+
+update : Msg -&gt; Model -&gt; Model
+update msg model =
+    case msg of
+        Change newName -&gt;
+            case model.selectedHeroId of
+                Nothing -&gt;
+                    model
+
+                Just i -&gt;
+                    let
+                        h =
+                            getHero i model.heroes
+                    in
+                        { model | heroes = (replaceHero i (Hero h.id newName) model.heroes) }
+
+        Select hero -&gt;
+            { model | selectedHeroId = Just hero.id }
+
+</code></pre>
+
+<p>Since now Msg type has two constructors (we can interact with our application by selecting an hero from the list and by changing its name), we have to handle both cases.
+Case for Change hero&rsquo;s name hasn&rsquo;t changed a lot. Model has been refactored so that we &ldquo;update&rdquo; the hero&rsquo;s name when we have to change it. This is done by creating a new list (using the <code>replaceHero</code> helping function).</p>
+
+<p>We have to build a new list because data in Elm are immutable: once defined a value, we cannot change it. All we can do is to assign a variable to a new value like we do with heroes assigning it to a new list containing updated information.</p>
+
+<p>Syntax <code>{ model | heroes = ... }</code> is a syntactic sugar for <code>model = {selectedHeroId = mode.selectedHeroId, heroes = ... }</code> and it does not change the value of the record in place.</p>
+
+<p>Code for <code>Select</code> hero is also very simple: just an assignment to <code>SelectedHeroId</code> with <code>Just</code> constructor (pun intended).</p>
+
+<p>Through the code we saw some utility functions that helped in making the code more clear and concise. As we said earlier, factoring out small reusable functions is the key in having a nice Elm code that is easy to maintain and refactor.</p>
+
+<p>Here you can see two of them that shows how recursion can be used to iterate over a list.</p>
+
+<pre><code class="language-elm">-- UTILS
+
+
+replaceHero : Int -&gt; Hero -&gt; List Hero -&gt; List Hero
+replaceHero i h hs =
+    case hs of
+        [] -&gt;
+            hs
+
+        x :: xs -&gt;
+            if i == x.id then
+                h :: xs
+            else
+                x :: (replaceHero i h xs)
+
+
+getHero : Int -&gt; List Hero -&gt; Hero
+getHero i heroes =
+    case heroes of
+        [] -&gt;
+            Debug.crash &quot;Should never go here&quot;
+
+        x :: xs -&gt;
+            if x.id == i then
+                x
+            else
+                getHero i xs
+
+</code></pre>
+
+<p>Let&rsquo;s walk through the second one first. <code>getHero</code> is a function that takes a hero id (Int) and a list of heroes and returns the hero object identified by the hero id we passed as first parameter.</p>
+
+<p>Function body uses the <code>case</code> syntax to <strong>pattern match</strong> against the List constructors. This basically means that an Elm List can be constructed either like an empty list (<code>[]</code>) or by attaching an element to a second list (<code>x :: xs</code>). Pattern match allows to express a function differently depending on the pattern that is matched.</p>
+
+<p>Looking at our function, we pattern match heroes against an empty list or against a list with at least one argument. Since the first case should never happen, we deliberately decide to make the application crash if matched. In the second case, we first check if the first element in the list (<code>x</code>) is the element we were looking for. If yes we return it, otherwise we call recursively the same function on the rest of the list.</p>
+
+<p>Recursion is used also in the first example where we recursively build the new list of heroes with the new hero replaced in place of the old one (if found).</p>
+
+<p>It can take a while before thinking in terms of recursive problems becomes natural: we are so used to think in terms of loops! Thinking to a problem in terms of a similar, smaller and easier to solve problem usually represents a nice way to solve it, (even if it might be wired at the beginning).</p>
+
+<h3 id="second-take-home-about-elm">Second take home about Elm</h3>
+
+<p>A common topic in this post is about the possibility of missing data. Elm doesn&rsquo;t have something like a null reference and what can be used to describe the lack of data is the <code>Maybe</code> container. In this way we are forced to handle all cases explicitly, resulting in a much more reliable code.</p>
+
+<p>This is why in the <code>getHero</code> function we had to handle the code for empty list even if we are sure that the application will never call it. But what happens if we remove that branch?
+That is the error message we have from the compiler where we try to compile the code:</p>
+
+<pre><code>-- MISSING PATTERNS ---- \TourOfElm\src\Main.elm
+
+This `case` does not have branches for all possibilities.
+
+102|&gt;    case heroes of
+103|&gt;
+104|&gt;        x :: xs -&gt;
+105|&gt;            if x.id == i then
+106|&gt;                x
+107|&gt;            else
+108|&gt;                getHero i xs
+
+You need to account for the following values:
+
+    []
+
+Add a branch to cover this pattern!
+
+If you are seeing this error for the first time, check out these hints:
+&lt;https://github.com/elm-lang/elm-compiler/blob/0.17.1/hints/missing-patterns.md&gt;
+The recommendations about wildcard patterns and `Debug.crash` are important!
+</code></pre>
+
+<p>So we have to cover all possibilities. In this example, since we call the function on a selected hero, it doesn&rsquo;s make sense to call this function with an <code>id</code> that is not present in the list of heroes. Hence we call <code>Debug.crash</code> to explicitly make crash the application in case of that code being called (something must have gone very bad somewhere and we better make the application crash right here instead of let it crash later).</p>
+
+<p>Getting rid of null reference is a great improvement in comparison to javascript, given what its inventor <a href="https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare">thinks</a> about it.</p>
+
+<p>Those are some thoughts from Thomas Hoare, who introduced the Null reference in ALGOL language:</p>
+
+<blockquote>
+<blockquote>
+<p>I call it my billion-dollar mistake! At that time, I was designing the first comprehensive type system for references in an object-oriented language. My goal was to ensure that all use of references should be absolutely safe, with checking performed automatically by the compiler. But I couldn&rsquo;t resist the temptation to put in a null reference, simply because it was so easy to implement. This has led to innumerable errors, vulnerabilities, and system crashes, which have probably caused a billion dollars of pain and damage in the last forty years. - Tony Hoare, inventor of ALGOL W.</p>
+</blockquote>
+</blockquote>
+
+</div>
+
+        <footer class="post-footer clearfix">
+    
+        <p class="post-tags">
+            <span>Tagged:</span>
+            
+                 <a href="/tags/elm/">elm</a>
+            
+                 <a href="/tags/angular/">angular</a>
+            
+        </p>
+    
+
+    <div class="share">
+        <a class="icon-twitter" href="http://twitter.com/share?text=Tour%20Of%20Elm%20-%20Part%20Two&url=https%3a%2f%2ftizpuppi.github.io%2fblog%2ftour_of_elm-part_two%2f"
+            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+            <i class="fa fa-twitter"></i>
+            <span class="hidden">Twitter</span>
+        </a>
+
+        <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https%3a%2f%2ftizpuppi.github.io%2fblog%2ftour_of_elm-part_two%2f"
+            onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+            <i class="fa fa-facebook"></i>
+            <span class="hidden">Facebook</span>
+        </a>
+
+        <a class="icon-google-plus" href="https://plus.google.com/share?url=https%3a%2f%2ftizpuppi.github.io%2fblog%2ftour_of_elm-part_two%2f"
+           onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+           <i class="fa fa-google-plus"></i>
+            <span class="hidden">Google+</span>
+        </a>
+    </div>
+</footer>
+
+        
+    </article>
+</div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="site-title-wrapper">
+                    <h1 class="site-title">
+                        <a title="tizpuppi" href="https://tizpuppi.github.io/">tizpuppi</a>
+                    </h1>
+                    <a class="button-square button-jump-top js-jump-top" href="#">
+                        <i class="fa fa-angle-up"></i>
+                    </a>
+                </div>
+
+                <p class="footer-copyright">
+                    <span>&copy; 2016 / Powered by <a href="http://gohugo.io/">Hugo</a></span>
+                </p>
+                <p class="footer-copyright">
+                    <span><a href="https://github.com/roryg/ghostwriter">Ghostwriter theme</a> By <a href="http://jollygoodthemes.com">JollyGoodThemes</a></span>
+                    <span>/ <a href="https://github.com/jbub/ghostwriter">Ported</a> to Hugo By <a href="https://github.com/jbub">jbub</a></span>
+                </p>
+            </div>
+        </footer>
+
+        <script src="https://tizpuppi.github.io/js/jquery-1.11.3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+        <script src="https://tizpuppi.github.io/js/jquery.fitvids.js"></script>
+        <script src="https://tizpuppi.github.io/js/scripts.js"></script>
+    </body>
+</html>
+

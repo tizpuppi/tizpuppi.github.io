@@ -100,7 +100,7 @@ ga('send', 'pageview');
 
 <h3 id="let-s-scale-multiple-heroes">Let&rsquo;s scale: multiple heroes</h3>
 
-<p>We are ready to continue our journey of the angular 2 tutorial in Elm. We have touched a bit the Elm architecture in <a href="/blog/tour_of_elm-part_one/">previous post</a> and now we are ready to build on it. We left the application at the point where there was one hero displayed on the page and we were able to nicely change its name.</p>
+<p>We are ready to continue our journey of the angular 2 tutorial in Elm. We have touched a bit the Elm architecture in the <a href="/blog/tour_of_elm-part_one/">previous post</a> and we are now ready to build on it. We left the application at the point where there was one hero displayed on the page and we were able to nicely change its name.</p>
 
 <p>Now it&rsquo;s time to grow and we want to scale this feature on multiple heroes, showing a list of heroes among which we can choose, and changing its name once selected. Here you can see a screenshot of the desired behaviour:</p>
 
@@ -108,11 +108,11 @@ ga('send', 'pageview');
 
 <p>As usual all code is available in the <a href="https://github.com/tizpuppi/TourOfElm">github</a> repository: for this post you can refer to branch 02-HeroList.</p>
 
-<p>We will build on top of the code we wrote for previous post.</p>
+<p>We will build on top of the code we wrote for the previous post.</p>
 
 <h6 id="model">model</h6>
 
-<p>Let&rsquo;s start to refactor the model:</p>
+<p>Let&rsquo;s start by refactoring the model:</p>
 
 <pre><code class="language-elm">-- MODEL
 
@@ -145,9 +145,9 @@ initialModel =
     { selectedHeroId = Nothing, heroes = heroes }
 </code></pre>
 
-<p>Hero type alias doesn&rsquo;t change from previous version, but now the Model type alias is defined as a record containing the id of the selected hero (if any) and a list of heroes (defined separately for sake of clarity).</p>
+<p>THe Hero type alias doesn&rsquo;t change from the previous version, but now the Model type alias is defined as a record containing the id of the selected hero (if any) and a list of heroes (defined separately for sake of clarity).</p>
 
-<p>In Elm, like in other functional languages List is a key data structure. Lists are iterable containers containing data of same type and are often used to transform data or perform computations over them: we&rsquo;ll see later an example of this in action when transforming list of Heroes into list of Html objects.</p>
+<p>In Elm, like in other functional languages, List is a key data structure. Lists are iterable containers containing data of the same type and are often used to transform data or perform computations over them: we&rsquo;ll see later an example of this in action when transforming a list of Heroes into a list of Html objects.</p>
 
 <p>The second interesting Elm feature is that there is no null value. This is quite a revolution if compared to javascript, and I tend to believe that this is one of Elm&rsquo;s greatest feature.</p>
 
@@ -220,7 +220,7 @@ view model =
 
 <p>If we start reading from the last function (view), it&rsquo;s pretty clear what this function does: it displays the title in a header, a sub-header, a list and some details.</p>
 
-<p>Here we can learn another important lesson well stated in the Elm Architecture Guide:</p>
+<p>Here we can learn another important lesson stated in the Elm Architecture Guide:</p>
 
 <blockquote>
 <blockquote>
@@ -228,13 +228,13 @@ view model =
 </blockquote>
 </blockquote>
 
-<p>This is a pattern we will see through the whole tutorial: we will split our application by isolating small functions in modules. We prefer function composition over components assembling, especially when we are dealing conceptually with one subject (aka one model) like a list of heroes. Structuring an applications by means of reusable components is still possible to do in Elm, but this approach is suggested when each component is a really standalone piece with its own life (aka state or model in Elm terminology).</p>
+<p>This is a pattern we will see through the whole tutorial: we will split our application by isolating small functions in modules. We prefer function composition over components assembling, especially when we are dealing conceptually with one subject (aka one model) like a list of heroes. Structuring an application by means of reusable components is still possible in Elm, but this approach is only suggested when each component is a really standalone piece with its own life (aka state or model in Elm terminology).</p>
 
 <p>As anticipated earlier, in this snippet of code we can also see how List is used to transform data from Model to Html. List.map is an Elm core utility function that takes a function and a list and returns a new list with the function applied to every element of the original list. Here the functions is an anonymous function: syntax for anonymous functions is  <code>(\e -&gt; ... )</code> where <code>e</code> is the input parameter and in this case represents an element of the original list.</p>
 
-<p>This is one example of how functional languages can avoid using <code>for ...</code> loop syntax making the language clearer. Mapping a function to a list is even more descriptive then a for loop!.</p>
+<p>This is one example of how functional languages can avoid using <code>for ...</code> loop syntax making the language clearer. Mapping a function to a list is even more descriptive then using a <code>for</code> loop!.</p>
 
-<p>Another way of avoid for loops is by means of recursion. Let&rsquo;s go to the update function to see it.</p>
+<p>Another way to avoid <code>for</code> loops is by means of recursion. Let&rsquo;s go to the update function to see it.</p>
 
 <h6 id="update">update</h6>
 
@@ -269,17 +269,17 @@ update msg model =
 </code></pre>
 
 <p>Since now Msg type has two constructors (we can interact with our application by selecting an hero from the list and by changing its name), we have to handle both cases.
-Case for Change hero&rsquo;s name hasn&rsquo;t changed a lot. Model has been refactored so that we &ldquo;update&rdquo; the hero&rsquo;s name when we have to change it. This is done by creating a new list (using the <code>replaceHero</code> helping function).</p>
+Case for Change hero&rsquo;s name hasn&rsquo;t changed a lot. The Model has been refactored so that we &ldquo;update&rdquo; the hero&rsquo;s name when we have to change it. This is done by creating a new list (using the <code>replaceHero</code> helping function).</p>
 
-<p>We have to build a new list because data in Elm are immutable: once defined a value, we cannot change it. All we can do is to assign a variable to a new value like we do with heroes assigning it to a new list containing updated information.</p>
+<p>We have to build a new list because data in Elm are immutable: once a value has been defined, we cannot change it. All we can do is to assign a variable to a new value as we do with heroes assigning it to a new list containing updated information.</p>
 
 <p>Syntax <code>{ model | heroes = ... }</code> is a syntactic sugar for <code>model = {selectedHeroId = mode.selectedHeroId, heroes = ... }</code> and it does not change the value of the record in place.</p>
 
 <p>Code for <code>Select</code> hero is also very simple: just an assignment to <code>SelectedHeroId</code> with <code>Just</code> constructor (pun intended).</p>
 
-<p>Through the code we saw some utility functions that helped in making the code more clear and concise. As we said earlier, factoring out small reusable functions is the key in having a nice Elm code that is easy to maintain and refactor.</p>
+<p>Through the code we saw some utility functions that helped making the code more clear and concise. As we said earlier, factoring out small reusable functions is the key for having a nice Elm code that is easy to maintain and refactor.</p>
 
-<p>Here you can see two of them that shows how recursion can be used to iterate over a list.</p>
+<p>Here you can see two of them that show how recursion can be used to iterate over a list.</p>
 
 <pre><code class="language-elm">-- UTILS
 
@@ -317,16 +317,16 @@ getHero i heroes =
 
 <p>Looking at our function, we pattern match heroes against an empty list or against a list with at least one argument. Since the first case should never happen, we deliberately decide to make the application crash if matched. In the second case, we first check if the first element in the list (<code>x</code>) is the element we were looking for. If yes we return it, otherwise we call recursively the same function on the rest of the list.</p>
 
-<p>Recursion is used also in the first example where we recursively build the new list of heroes with the new hero replaced in place of the old one (if found).</p>
+<p>Recursion is used also in the first example where we recursively build the new list of heroes with the new hero replacing the old one (if found).</p>
 
-<p>It can take a while before thinking in terms of recursive problems becomes natural: we are so used to think in terms of loops! Thinking to a problem in terms of a similar, smaller and easier to solve problem usually represents a nice way to solve it, (even if it might be wired at the beginning).</p>
+<p>It can take a while before thinking in terms of recursive problems becomes natural: we are so used to think in terms of loops! Thinking about a problem in terms of a similar, smaller and easier to solve problem usually represents a nice way to solve it, (even if it might be wired at the beginning).</p>
 
 <h3 id="second-take-home-about-elm">Second take home about Elm</h3>
 
 <p>A common topic in this post is about the possibility of missing data. Elm doesn&rsquo;t have something like a null reference and what can be used to describe the lack of data is the <code>Maybe</code> container. In this way we are forced to handle all cases explicitly, resulting in a much more reliable code.</p>
 
 <p>This is why in the <code>getHero</code> function we had to handle the code for empty list even if we are sure that the application will never call it. But what happens if we remove that branch?
-That is the error message we have from the compiler where we try to compile the code:</p>
+This is the error message we have from the compiler where we try to compile the code:</p>
 
 <pre><code>-- MISSING PATTERNS ---- \TourOfElm\src\Main.elm
 
@@ -351,7 +351,7 @@ If you are seeing this error for the first time, check out these hints:
 The recommendations about wildcard patterns and `Debug.crash` are important!
 </code></pre>
 
-<p>So we have to cover all possibilities. In this example, since we call the function on a selected hero, it doesn&rsquo;s make sense to call this function with an <code>id</code> that is not present in the list of heroes. Hence we call <code>Debug.crash</code> to explicitly make crash the application in case of that code being called (something must have gone very bad somewhere and we better make the application crash right here instead of let it crash later).</p>
+<p>So we have to cover all possibilities. In this example, since we call the function on a selected hero, it doesn&rsquo;s make sense to call this function with an <code>id</code> that is not present in the list of heroes. Hence we call <code>Debug.crash</code> to explicitly make the application crash in case that code called (something must have gone very bad somewhere and we better make the application crash right here instead of let it crash later).</p>
 
 <p>Getting rid of null reference is a great improvement in comparison to javascript, given what its inventor <a href="https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare">thinks</a> about it.</p>
 

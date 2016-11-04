@@ -98,17 +98,17 @@ ga('send', 'pageview');
 
 <p>I Recently played with the <a href="http://elm-lang.org/">Elm</a> programming language and I really enjoyed its elegance and cleanness. Elm is a strongly typed functional language, largely inspired by Haskell, that compiles to javascript. Code written in Elm usually follows a simple pattern called <a href="https://guide.elm-lang.org/architecture/">Elm architecture</a> that helps to nicely structure your web application and that has inspired the Redux library for ReactJs.</p>
 
-<p>Having recently chosen Angular 2 as preferred front end framework at work, I was looking for a nice comparison between the two that could give me some insight about the different philosophies and approach to web development. Eventually I could even be better equipped to argue in favor of a functional not mainstream language!</p>
+<p>Having recently chosen Angular 2 as preferred front end framework at work, I was looking for a nice comparison between the two frameworks that could give me some insights about the different philosophies and approaches to web development. Eventually I could even be better equipped to argue in favor of a functional, not-mainstream language!</p>
 
 <p>The problem with tutorials is that each tend to emphasize the strength of a particular language/library/framework, showing ad hoc examples where that particular language or library shines.</p>
 
-<p>For this reason I&rsquo;ve chosen to implement the same <a href="https://angular.io/docs/ts/latest/tutorial/">tutorial</a> for Angular 2 using Elm and since the original tutorial is pretty long, I&rsquo;ve split it in several posts.</p>
+<p>For this reason I&rsquo;ve decided to implement the existing <a href="https://angular.io/docs/ts/latest/tutorial/">tutorial</a> for Angular 2 using Elm and since the original tutorial is pretty long, I&rsquo;ve split it in several posts.</p>
 
 <h1 id="angular-2-tutorial-in-elm-part-1">Angular 2 Tutorial in Elm - Part 1</h1>
 
 <h3 id="project-setup">Project setup.</h3>
 
-<p>I&rsquo;ve written this post and tested the code with version 0.17 of Elm and during this journey I will assume only a limited knowledge of the language. Previous exposure to Elm through the Elm tutorial will help to follow it. Anyway I will try to start gently so that even with limited knowledge you can have a global overview of the language.</p>
+<p>I&rsquo;ve written this post and tested the code with version 0.17 of Elm and during this journey I will assume you have only a limited knowledge of the language. Previous exposure to Elm through the Elm tutorial will help to follow it. Anyway I will try to start gently so that even with limited knowledge you can have a global overview of the language.</p>
 
 <p>This article assumes you have already installed node, npm package manager and Elm on your machine. If it&rsquo;s not the case you can give a look at <a href="https://nodejs.org/en/">nodejs</a> and <a href="http://elm-lang.org/">elm-lang</a> web sites.</p>
 
@@ -193,17 +193,17 @@ view model =
 
 </code></pre>
 
-<p>A lot of stuff for a simple screen! But laying down the code following the Elm architecture will help in making the code evolve as we will advance adding more features.</p>
+<p>A lot of stuff for a simple screen! But laying down the code following the Elm architecture will help making the code evolve as we will advance adding more features.</p>
 
 <p>Let&rsquo;s walk throw the code above.</p>
 
 <p>The first part is the module declaration <code>module Main exposing (..)</code> where we declare a Main module exposing all top level functions and data types. Every file in Elm is a module and if there is no module declaration by default the compiler assumes that previous declaration is included.</p>
 
-<p>Then some imports follow. Import allows us to use some functions declared in other modules. I will not explain here all the details, but if you want to have more info you can have a look at the <a href="https://guide.elm-lang.org/reuse/modules.html">Elm official site</a>. Let&rsquo;s move now to the core of this simple application.</p>
+<p>Then some imports follow. <code>Import</code> allows us to use some functions declared in other modules. I will not explain here all the details, but if you want to have more info you can have a look at the <a href="https://guide.elm-lang.org/reuse/modules.html">Elm official site</a>. Let&rsquo;s move now to the core of this simple application.</p>
 
 <h6 id="model">model</h6>
 
-<p>When coding in Elm the first thing I generally start with is the <strong>model</strong>: this is the heart of the application&rsquo;s logic! So let&rsquo;s have a look to our model.</p>
+<p>When coding in Elm the first thing I generally start with is the <strong>model</strong>: this is the heart of the application&rsquo;s logic! So let&rsquo;s have a look at our model.</p>
 
 <p>In this case we start by creating a type alias <code>type alias Hero = {id: Int, name: String}</code> to have a nicer name. What is in curly braces is called a record in Elm and it can be thought as a javascript object. Here we specify that an Hero object is made of two fields which in turn are of type Int and String. Those fields are the id and the name of our hero.</p>
 
@@ -213,17 +213,17 @@ view model =
 
 <h6 id="view">view</h6>
 
-<p>The second thing we better implement is the <strong>view</strong>. In Elm there is no template language: the html is described in terms of functions being called, that is using the same language as the rest of the code. This has his pros and his cons, but personally, after a first time where I was having some difficulties in reading it, the more I work with the more I like this approach. I will come back later with some reflections on this topic. In general the code for the view is pretty straightforward and self-explanatory so I will not spend to much words on the view function.</p>
+<p>The second thing we better do is to implement the <strong>view</strong>. In Elm there is no template language: the html is described in terms of functions being called, which means using the same language as the rest of the code. This has its pros and its cons, but personally, after a first time where I was having some difficulties in reading it, the more I work with it the more I like this approach. I will come back later with some thoughts on this topic. In general the code for the view is pretty straightforward and self-explanatory so I will not spend too much words on the view function.</p>
 
 <h6 id="update">update</h6>
 
-<p>Finally the code to <strong>update</strong> the model. In this first part we don&rsquo;t want to include any user interactions, so we define a dummy type Msg: <code>type Msg = NoOp</code>. The left hand side is the type declaration, and the right hand side is the constructor list. Here we can declare multiple constructor, similar to the union type we find in other languages. Fot this small example we define a single dummy constructor <code>NoOp</code> to mean that we don&rsquo;t want to perform any update operation. Right now we don&rsquo;t want to implement any user interaction, so the update function takes the current model and returns it.</p>
+<p>Finally the code to <strong>update</strong> the model. In this first part we don&rsquo;t want to include any user interactions, so we define a dummy type Msg: <code>type Msg = NoOp</code>. The left hand side is the type declaration, and the right hand side is the constructor list. Here we can declare multiple constructor, similar to the union type we find in other languages. Fot this small example we define a single dummy constructor <code>NoOp</code> meaning that we don&rsquo;t want to perform any update operation. Right now we don&rsquo;t want to implement any user interaction, so the update function takes the current model and returns it.</p>
 
 <p>All three pieces of this application (model, view, update) are glued together in the App.beginnerProgram function. <code>main = App.beginnerProgram { model = model, view = view, update = update }</code>This is the main function where the Elm runtime library plays its role: simply said, we can think of it as the responsible for refreshing the view, keeping it in sync with the model, and passing all messages to the update function.</p>
 
 <h3 id="the-hero-editor-adding-interactions">The Hero Editor - Adding interactions</h3>
 
-<p>Now that everything is in place, we need to add interactions with the users. For this we have to add an import for HTML events (we only want onInput event for the moment). Html.Events are much like javascript events callback with the difference that what we pass to the event is not a callback function like in javascript, but a message that will be passed to the update function in order to update the model and eventually refresh the view.</p>
+<p>Now that everything is in place, we need to add interactions with the users. To do so we have to add an import for HTML events (we only want onInput event for the moment). Html.Events are much like javascript events callback with the difference that what we pass to the event is not a callback function like in javascript, but a message that will be passed to the update function in order to update the model and eventually refresh the view.</p>
 
 <p>Here you can see the part of the code that we had to change in order to achieve this.</p>
 
@@ -271,11 +271,11 @@ view model =
 
 <h6 id="updating-update">updating update</h6>
 
-<p>First we need to update the <code>Msg</code> type, from the dummy <code>NoOp</code> to <code>Change String</code>. This means that when there will be some actions in the interface, a Msg of type <code>Change String</code> will be create (for example <code>Change &quot;Superman&quot;</code>). Then the update function extracts the payload associated with <code>Change Msg</code> and replaces the model with the new information. First we check that the Msg was build using the Change constructor. This is done using a <code>case</code> statement (similar to pattern matching in Haskell). Then with the new hero name a new hero record is build, and from there a new model record is created and returned (since is the last expression).</p>
+<p>First we need to update the <code>Msg</code> type from the dummy <code>NoOp</code> to <code>Change String</code>. This means that when there will be an action in the interface, a Msg of type <code>Change String</code> will be create (for example <code>Change &quot;Superman&quot;</code>). Then the update function extracts the payload associated with <code>Change Msg</code> and replaces the model with the new information. First we check that the Msg was build using the Change constructor. This is done using a <code>case</code> statement (similar to pattern matching in Haskell). Then with the new hero name a new hero record is build, and from there a new model record is created and returned (since it is the last expression).</p>
 
 <h6 id="immutable-data">immutable data</h6>
 
-<p>Note here a fundamental difference between javascript and Elm language: since all data are immutable by default, we cannot simply change the value of an object (record in this case) but we have to build a new one and evaluate the newly created object. This may seem confusing at beginning but the combination immutable data + stateless functions allows avoiding buggy side effects making ultimately easier to refactor code.</p>
+<p>Note here a fundamental difference between javascript and Elm language: since all data are immutable by default, we cannot simply change the value of an object (record in this case) but we have to build a new one and evaluate the newly created object. This may seem confusing at the beginning but the combination immutable data + stateless functions allows avoiding buggy side effects making it ultimately easier to refactor code.</p>
 
 <p>On the view side, we will use the onInput event. This event captures the string value associated with the input field, so that the new value is passed along with Change Msg to the update function.</p>
 

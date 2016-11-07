@@ -6,8 +6,305 @@
     <description>Recent content on tizpuppi</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 28 Oct 2016 09:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Mon, 07 Nov 2016 09:00:00 +0100</lastBuildDate>
     <atom:link href="https://tizpuppi.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Tour Of Elm - Part Three</title>
+      <link>https://tizpuppi.github.io/blog/tour_of_elm-part_three/</link>
+      <pubDate>Mon, 07 Nov 2016 09:00:00 +0100</pubDate>
+      
+      <guid>https://tizpuppi.github.io/blog/tour_of_elm-part_three/</guid>
+      <description>
+
+&lt;h1 id=&#34;angular-2-tutorial-in-elm-part-3&#34;&gt;Angular 2 Tutorial in Elm - Part 3&lt;/h1&gt;
+
+&lt;h3 id=&#34;the-external-world&#34;&gt;The external world&lt;/h3&gt;
+
+&lt;p&gt;We have smoothly built our application up to this point but still we are playing in insulation: once loaded, everything is there and no communication is done with the external world. This is perfect if we want to have a fancy single page application with some animation, but sometimes what we want to display depends on some information available remotely.&lt;/p&gt;
+
+&lt;p&gt;In this is part we will deal with remote server communication and we will build on top of what we have done in the previous &lt;a href=&#34;https://tizpuppi.github.io/blog/tour_of_elm-part_one/&#34;&gt;two&lt;/a&gt; &lt;a href=&#34;https://tizpuppi.github.io/blog/tour_of_elm-part_two/&#34;&gt;posts&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;let-s-grow-a-bit&#34;&gt;Let&amp;rsquo;s grow a bit&lt;/h3&gt;
+
+&lt;p&gt;The main function, responsible for gluing the model, the view, and the update function (via the Elm Architecture pattern), is &lt;code&gt;beginnerProgram&lt;/code&gt; from &lt;code&gt;Html.App&lt;/code&gt; module. As its name suggests, this function is suitable for simple applications, that do not need to handle external communication.&lt;/p&gt;
+
+&lt;p&gt;Operations that not only affects our model but that also send messages to the outside, or listen to incoming messages, make use of &lt;code&gt;Commands&lt;/code&gt; and &lt;code&gt;Subscriptions&lt;/code&gt;. In this tutorial we will not use subscriptions (those are especially useful for real-time communication using web sockets), but will use commands which in Elm have type &lt;code&gt;Cmd&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;To integrate Commands and Subscriptions in our code, we have to extend the Elm Architecture pattern, using the gluing function &lt;code&gt;program&lt;/code&gt;  also located in the &lt;code&gt;Html.App&lt;/code&gt; module. Both &lt;code&gt;beginnerProgram&lt;/code&gt; and &lt;code&gt;program&lt;/code&gt; functions take a record as parameter but the latter is a bit more sophisticated: here a list of items &lt;code&gt;program&lt;/code&gt; expects to receive as input:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;App.program { init = init, view = view, update = update, subscriptions = subscriptions }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;init&lt;/strong&gt; is an initial expression that program uses to bootstrap the application.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;view&lt;/strong&gt; is the usual view function as in the &lt;code&gt;beginnerProgram&lt;/code&gt; case&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;update&lt;/strong&gt; has the same meaning as in &lt;code&gt;beginnerProgram&lt;/code&gt; case, but its signature changes as we will see briefly.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;subscriptions&lt;/strong&gt; is used to listen to external events (coming from outside the application)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Here you can find the signature for these functions:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;init : ( Model, Cmd Msg )
+view : Model -&amp;gt; Html Msg
+update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+subscriptions : Model -&amp;gt; Sub Msg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The most important change is in the update function: the return type is not only the updated model, but also a command to be performed. Similarly, we do not bootstrap the application giving an initial model, but we give a tuple composed by an initial model and an initial command to be performed at the very beginning.&lt;/p&gt;
+
+&lt;p&gt;As usual I will refer to my &lt;a href=&#34;https://github.com/tizpuppi/TourOfElm&#34;&gt;github&lt;/a&gt; repository, building from where we left in the previous post (branch 02-HeroList). I will show here the changes in order to upgrade from beginnerProgram to Program:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;App.beginnerProgram { model = initialModel, view = view, update = update }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;becomes&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;App.program { init = init, view = view, update = update, subscriptions = subscriptions }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is the new init function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;init : ( Model, Cmd Msg )
+init =
+    initialModel ! [ Cmd.none ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;No command must be issued for the moment, so we simply add to the initialModel, the command &lt;code&gt;Cmd.none&lt;/code&gt; (empty command). The &lt;code&gt;!&lt;/code&gt; operator is a syntactic sugar for &lt;code&gt;(Model, Cmd Msg)&lt;/code&gt; tuple. It takes a model on the left and a list of commands on the right returning a tuple of type &lt;code&gt;(Model, Cmd Msg)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The update function also changes signature:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and instead of returning an updated &lt;code&gt;model&lt;/code&gt; expression, now we return &lt;code&gt;model ! [ Cmd.none]&lt;/code&gt;, as in the initial expression.&lt;/p&gt;
+
+&lt;p&gt;Finally the subscriptions code:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;subscriptions : Model -&amp;gt; Sub Msg
+subscriptions model =
+    Sub.none
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since we do not use subscription here, we take as input the model and we return the special subscription &lt;code&gt;Sub.none&lt;/code&gt; (empty subscription).&lt;/p&gt;
+
+&lt;h3 id=&#34;server-here-we-have&#34;&gt;Server? Here we have&lt;/h3&gt;
+
+&lt;p&gt;Talking to a server means we need a server! Being a tutorial about a front end technology we want to focus on this side of a web application. This is why in most tutorials the back end is often simulated using an in memory structure. However it would be nice to develop with something that is as closer as possible to a real server. This is where json-server comes in.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;json-server&lt;/code&gt; is a &lt;a href=&#34;https://github.com/typicode/json-server&#34;&gt;javascript package&lt;/a&gt; that provides a fake rest api server. It implements a server reading a simple json file and can be installed by typing &lt;code&gt;npm install json-server --save&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here you can see the file where all information about our heroes are stored. This file is read by json-server so that we will be able to query it and receive those information in json format.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-json&#34;&gt;{
+  &amp;quot;heroes&amp;quot;: [
+    {
+      &amp;quot;id&amp;quot;: 11,
+      &amp;quot;name&amp;quot;: &amp;quot;Mr. Nice&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 12,
+      &amp;quot;name&amp;quot;: &amp;quot;Narco&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 13,
+      &amp;quot;name&amp;quot;: &amp;quot;Bombasto&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 14,
+      &amp;quot;name&amp;quot;: &amp;quot;Celeritas&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 15,
+      &amp;quot;name&amp;quot;: &amp;quot;Magneta&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 16,
+      &amp;quot;name&amp;quot;: &amp;quot;RubberMan&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 17,
+      &amp;quot;name&amp;quot;: &amp;quot;Dynama&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 18,
+      &amp;quot;name&amp;quot;: &amp;quot;Dr IQ&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 19,
+      &amp;quot;name&amp;quot;: &amp;quot;Magma&amp;quot;
+    },
+    {
+      &amp;quot;id&amp;quot;: 20,
+      &amp;quot;name&amp;quot;: &amp;quot;Tornado&amp;quot;
+    }
+  ]
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In order to launch it we have to simply type &lt;code&gt;json-server --watch server/db.json&lt;/code&gt; assuming that we have stored the file above named as db.json in a folder named server.&lt;/p&gt;
+
+&lt;h3 id=&#34;hello-server&#34;&gt;Hello server!&lt;/h3&gt;
+
+&lt;p&gt;Up to know we have only set all what was necessary to fetch data from a remote server. Now it&amp;rsquo;s time to implement actual code.&lt;/p&gt;
+
+&lt;p&gt;Elm doesn&amp;rsquo;t have the http module installed by default. In order to install we have to install the &lt;code&gt;evancz/elm-http&lt;/code&gt; package by typing &lt;code&gt;elm package install evancz/elm-http&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s jumps to the code and see how a GET request is performed:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;getHeroes : Cmd Msg
+getHeroes =
+    let
+        url =
+            &amp;quot;http://localhost:3000/heroes&amp;quot;
+    in
+        Task.perform FetchFail FetchSucceed (Http.get decodeUrl url)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After installing json-server and running it, we can fetch Heroes list directly from the server. &lt;code&gt;getHeroes&lt;/code&gt; does the asynchronous call using the Task module.&lt;/p&gt;
+
+&lt;p&gt;As we sad earlier, commands are used to perform activities that involve side effects (like talking to a server for example). But commands are simply a description of the operation that have to be performed: a command have to be executed and one way to do it is by means of asynchronous operations that can succeed or fail. Tasks serve to this purpose and they are similar to promises in JavaScript. &lt;code&gt;Cmd&lt;/code&gt; and &lt;code&gt;Task&lt;/code&gt; are not easy to grasp at the beginning and you can refer to the &lt;a href=&#34;http://package.elm-lang.org/packages/elm-lang/core/latest/Platform-Cmd&#34;&gt;documentation&lt;/a&gt; to have more info. Nevertheless it is easier to understand these concepts if first you see them in action.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Task.perform&lt;/code&gt; instructs the runtime system to perform a task. In the code above we specify in the first two positions the messages to pass to the runtime in case of failure or success of the asynchronous operation. Below you can see the definition of the two new messages &lt;code&gt;FetchFail&lt;/code&gt; and &lt;code&gt;FetchSucceed&lt;/code&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;type Msg
+    = Change String
+    | Select Hero
+    | FetchFail Http.Error
+    | FetchSucceed (List Hero)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally the last argument it the task to be executed itself. &lt;code&gt;Http.get&lt;/code&gt; takes as arguments a decoder function, to decode the received message, and a string containing the ulr where to perform the GET request. It then returns the task that &lt;code&gt;Task.perform&lt;/code&gt; will execute. In our case &lt;code&gt;url&lt;/code&gt; is pointing to localhost, port 3000, because this is the default port of json-server.&lt;/p&gt;
+
+&lt;p&gt;In case of failure, a message of type &lt;code&gt;FetchFail&lt;/code&gt; is passed to the application along with an error code. If we look at the documentation of the Http module, we can see &lt;code&gt;Http.Error&lt;/code&gt; defined as:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;type Error
+    = Timeout
+    | NetworkError
+    | UnexpectedPayload String
+    | BadResponse Int String
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In case of success, a new List of Hero is passed as payload to the message &lt;code&gt;FetchSucceed&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here &lt;code&gt;decodeUrl&lt;/code&gt; is the function that transforms our json response into an Elm object. This is how we defined it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;decodeUrl : Json.Decoder (List Hero)
+decodeUrl =
+    let
+        hero =
+            Json.object2 (\id name -&amp;gt; Hero id name)
+                (&amp;quot;id&amp;quot; := Json.int)
+                (&amp;quot;name&amp;quot; := Json.string)
+    in
+        Json.list hero
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our list of Heroes is made of Hero objects, so the first part of the function definition deals with the problem of decoding each element of the json array into a Hero object.&lt;/p&gt;
+
+&lt;p&gt;Json module, imported at the beginning of the code, has all the ingredients to perform this operation. The trick to understand this piece of code is the fact that we are composing different decoders to form a more complex one.&lt;/p&gt;
+
+&lt;p&gt;In the guide for Json module, &lt;code&gt;Json.Decoder&lt;/code&gt; is defined as &lt;code&gt;type Decoder a&lt;/code&gt;: this means that it is a parametric type. In our code we assigned the type &lt;code&gt;List Hero&lt;/code&gt; to the parameter.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Json.list&lt;/code&gt; is the functions that decodes a javascript array into an Elm List using the decoder given as first argument: this will be the decoder used for every item in the array. In our case we defined above such decoder called &lt;code&gt;hero&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;So let&amp;rsquo;s move to analyze the first decoder. The story for &lt;code&gt;Json.object2&lt;/code&gt; function is similar to the one we just saw. This is a decoder used to decode a json object with exactly two fields and that takes a function as first argument, and two more decoders. The latter are used to decode each field, while the function, given as first parameter, is used to build an Elm object from the decoded json object&amp;rsquo;s elements.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;Json.int&lt;/code&gt; and &lt;code&gt;Json.string&lt;/code&gt; are two decoders that decode primitive json elements in primitive Elm types (&lt;code&gt;Int&lt;/code&gt; and &lt;code&gt;String&lt;/code&gt;). Finally the &lt;code&gt;:=&lt;/code&gt; operator (defined by Json module) is used again to compose a Json decoder with a string and is used to decode the field names in a json object.&lt;/p&gt;
+
+&lt;p&gt;Almost done!&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s now complete what is missing: the update function must take into account the two new messages that we have defined earlier.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;        FetchFail _ -&amp;gt;
+            model
+                ! [ Cmd.none ]
+
+        FetchSucceed heroes -&amp;gt;
+            { model | heroes = heroes }
+                ! [ Cmd.none ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In this example in case of failure we return the same model for simplicity. This is just a personal choice, but in production code it is likely that you want to change the model in order to display some error message to the user.&lt;/p&gt;
+
+&lt;p&gt;In case of success, once a new list of Heroes has been retrieved, we simply use it to define the new model and display the retrieved data.&lt;/p&gt;
+
+&lt;p&gt;Now that everything is set up, we need to trigger the initial call to the server by changing the initial command from &lt;code&gt;Cmd.none&lt;/code&gt; to &lt;code&gt;getHeroes&lt;/code&gt;. Here you can see the new init function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;init : ( Model, Cmd Msg )
+init =
+    initialModel ! [ getHeroes ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And since we retrieve the list of heroes from the server, we do not need anymore to define this list in the code. Our initial model can use an empty list as initial value for the list of heroes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;initialModel : Model
+initialModel =
+    { selectedHeroId = Nothing, heroes = [] }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The complete code is available as usual in the &lt;a href=&#34;https://github.com/tizpuppi/TourOfElm&#34;&gt;github&lt;/a&gt; repository in branch &lt;code&gt;03-FetchFromRemote&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&#34;third-take-home-about-elm&#34;&gt;Third take home about Elm&lt;/h3&gt;
+
+&lt;p&gt;Type is your fiend! Really!!&lt;/p&gt;
+
+&lt;p&gt;When I first started writing Elm code, I immediately felt in love with its type system: it is really there to help you to write correct code.&lt;/p&gt;
+
+&lt;p&gt;Type system in Elm is very different from types in a typical strong typed language because types are inferred from the code: Elm compiler is able to deduce variables type by looking at how that variable is used. This also means that type annotation are not mandatory (but strongly suggested).&lt;/p&gt;
+
+&lt;p&gt;This comes handy for example when coding with parametric types, like we did with Json Decoder. If we change &lt;code&gt;decodeUrl&lt;/code&gt; function with:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-elm&#34;&gt;decodeUrl : Json.Decoder (List Hero)
+decodeUrl =
+    let
+        hero =
+            Json.object2 (\id name -&amp;gt; Hero id name)
+                (&amp;quot;id&amp;quot; := Json.string)
+                (&amp;quot;name&amp;quot; := Json.string)
+    in
+        Json.list hero
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;and try to compile, we see a compile error like this one:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;-- TYPE MISMATCH ------- /TourOfElm/src/Update.elm
+
+The 2nd argument to function `object2` is causing a mismatch.
+
+86|             Json.object2 (\id name -&amp;gt; Hero id name)
+87|&amp;gt;                (&amp;quot;id&amp;quot; := Json.string)
+88|                 (&amp;quot;name&amp;quot; := Json.string)
+
+Function `object2` is expecting the 2nd argument to be:
+
+    Json.Decoder Int
+
+But it is:
+
+    Json.Decoder String
+
+Hint: I always figure out the type of arguments from left to right. If an
+argument is acceptable when I check it, I assume it is &amp;quot;correct&amp;quot; in subsequent
+checks. So the problem may actually be in how previous arguments interact with
+the 2nd.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As you can see, the compiler correctly deduced the type parameter used for Decoder of the &lt;code&gt;id&lt;/code&gt; variable by knowing that the Hero constructor expects &lt;code&gt;id&lt;/code&gt; to be of type &lt;code&gt;Int&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Note also how the error message is really human friendly and easy to understand compared to other languages. This is really a great feature that plays in favor of Elm language (and compiler) and it has been a clear obsession of Elm&amp;rsquo;s &amp;ldquo;father&amp;rdquo; Evan Czaplicki.&lt;/p&gt;
+
+&lt;p&gt;As he &lt;a href=&#34;http://elm-lang.org/blog/compiler-errors-for-humans&#34;&gt;once&lt;/a&gt; said:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Ease of use is a major priority in Elm, so I recently took a couple weeks to really focus on this. I learned that you can make a shockingly huge difference just by thinking about the user experience.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Its very nice to see how a compiler can be written with the user in mind helping the developer with useful hints and giving finally the developer a tool that helps refactoring the code without introducing new bugs.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>Tour Of Elm - Part Two</title>

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Tour Of Elm - Part Three &middot; Tiziano Puppi</title>
+        <meta name="description" content="Server communication">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="generator" content="Hugo 0.16" />
+        <meta name="robots" content="index,follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link rel="stylesheet" href="https://tizpuppi.github.io/css/normalize.css">
+        <link rel="stylesheet" href="https://tizpuppi.github.io/css/highlight.css">
+        <link rel="stylesheet" href="https://tizpuppi.github.io/css/style.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,600,700,300&subset=latin,cyrillic-ext,latin-ext,cyrillic">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+    </head>
+    <body>
+        
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-86298199-1', 'auto');
+ga('send', 'pageview');
+</script>
+
+
+        <div id="wrapper">
+            <header class="site-header">
+                <div class="container">
+                    <div class="site-title-wrapper">
+                        
+                            <h1 class="site-title">
+                                <a title="tizpuppi" href="https://tizpuppi.github.io/">tizpuppi</a>
+                            </h1>
+                        
+                        <a class="button-square" href="https://tizpuppi.github.io/index.xml"><i class="fa fa-rss"></i></a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Github" title="Github" href="https://github.com/tizpuppi">
+                                <i class="fa fa-github-alt"></i>
+                            </a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="LinkedIn" title="LinkedIn" href="https://www.linkedin.com/in/tizianopuppi">
+                                <i class="fa fa-linkedin"></i>
+                            </a>
+                        
+                        
+                    </div>
+
+                    <ul class="site-nav">
+                        
+    <li class="site-nav-item">
+        <a title="Blog" href="/">Blog</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="About" href="/about/">About</a>
+    </li>
+
+                    </ul>
+                </div>
+            </header>
+
+            <div id="container">
+
+
+<div class="container">
+    <article class="post-container" itemscope="" itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Tour Of Elm - Part Three</h1>
+    
+        <p class="post-description" itemprop="description">Server communication</p>
+    
+    <p class="post-date">
+        <span>Published <time datetime="2016-11-07" itemprop="datePublished">Mon, Nov 7, 2016</time></span>
+        <span>by</span>
+        <span itemscope="" itemprop="author" itemtype="http://schema.org/Person">
+            <span itemprop="name">
+                <a href="" itemprop="url" rel="author">Tiziano Puppi</a>
+            </span>
+        </span>
+    </p>
+</header>
+
+        <div class="post-content clearfix" itemprop="articleBody">
+    
+
+    
+
+<h1 id="angular-2-tutorial-in-elm-part-3">Angular 2 Tutorial in Elm - Part 3</h1>
+
+<h3 id="the-external-world">The external world</h3>
+
+<p>We have smoothly built our application up to this point but still we are playing in insulation: once loaded, everything is there and no communication is done with the external world. This is perfect if we want to have a fancy single page application with some animation, but sometimes what we want to display depends on some information available remotely.</p>
+
+<p>In this is part we will deal with remote server communication and we will build on top of what we have done in the previous <a href="/blog/tour_of_elm-part_one/">two</a> <a href="/blog/tour_of_elm-part_two/">posts</a>.</p>
+
+<h3 id="let-s-grow-a-bit">Let&rsquo;s grow a bit</h3>
+
+<p>The main function, responsible for gluing the model, the view, and the update function (via the Elm Architecture pattern), is <code>beginnerProgram</code> from <code>Html.App</code> module. As its name suggests, this function is suitable for simple applications, that do not need to handle external communication.</p>
+
+<p>Operations that not only affects our model but that also send messages to the outside, or listen to incoming messages, make use of <code>Commands</code> and <code>Subscriptions</code>. In this tutorial we will not use subscriptions (those are especially useful for real-time communication using web sockets), but will use commands which in Elm have type <code>Cmd</code>.</p>
+
+<p>To integrate Commands and Subscriptions in our code, we have to extend the Elm Architecture pattern, using the gluing function <code>program</code>  also located in the <code>Html.App</code> module. Both <code>beginnerProgram</code> and <code>program</code> functions take a record as parameter but the latter is a bit more sophisticated: here a list of items <code>program</code> expects to receive as input:</p>
+
+<pre><code class="language-elm">App.program { init = init, view = view, update = update, subscriptions = subscriptions }
+</code></pre>
+
+<ul>
+<li><strong>init</strong> is an initial expression that program uses to bootstrap the application.</li>
+<li><strong>view</strong> is the usual view function as in the <code>beginnerProgram</code> case</li>
+<li><strong>update</strong> has the same meaning as in <code>beginnerProgram</code> case, but its signature changes as we will see briefly.</li>
+<li><strong>subscriptions</strong> is used to listen to external events (coming from outside the application)</li>
+</ul>
+
+<p>Here you can find the signature for these functions:</p>
+
+<pre><code class="language-elm">init : ( Model, Cmd Msg )
+view : Model -&gt; Html Msg
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+subscriptions : Model -&gt; Sub Msg
+</code></pre>
+
+<p>The most important change is in the update function: the return type is not only the updated model, but also a command to be performed. Similarly, we do not bootstrap the application giving an initial model, but we give a tuple composed by an initial model and an initial command to be performed at the very beginning.</p>
+
+<p>As usual I will refer to my <a href="https://github.com/tizpuppi/TourOfElm">github</a> repository, building from where we left in the previous post (branch 02-HeroList). I will show here the changes in order to upgrade from beginnerProgram to Program:</p>
+
+<pre><code class="language-elm">App.beginnerProgram { model = initialModel, view = view, update = update }
+</code></pre>
+
+<p>becomes</p>
+
+<pre><code class="language-elm">App.program { init = init, view = view, update = update, subscriptions = subscriptions }
+</code></pre>
+
+<p>This is the new init function:</p>
+
+<pre><code class="language-elm">init : ( Model, Cmd Msg )
+init =
+    initialModel ! [ Cmd.none ]
+</code></pre>
+
+<p>No command must be issued for the moment, so we simply add to the initialModel, the command <code>Cmd.none</code> (empty command). The <code>!</code> operator is a syntactic sugar for <code>(Model, Cmd Msg)</code> tuple. It takes a model on the left and a list of commands on the right returning a tuple of type <code>(Model, Cmd Msg)</code>.</p>
+
+<p>The update function also changes signature:</p>
+
+<pre><code class="language-elm">update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+</code></pre>
+
+<p>and instead of returning an updated <code>model</code> expression, now we return <code>model ! [ Cmd.none]</code>, as in the initial expression.</p>
+
+<p>Finally the subscriptions code:</p>
+
+<pre><code class="language-elm">subscriptions : Model -&gt; Sub Msg
+subscriptions model =
+    Sub.none
+</code></pre>
+
+<p>Since we do not use subscription here, we take as input the model and we return the special subscription <code>Sub.none</code> (empty subscription).</p>
+
+<h3 id="server-here-we-have">Server? Here we have</h3>
+
+<p>Talking to a server means we need a server! Being a tutorial about a front end technology we want to focus on this side of a web application. This is why in most tutorials the back end is often simulated using an in memory structure. However it would be nice to develop with something that is as closer as possible to a real server. This is where json-server comes in.</p>
+
+<p><code>json-server</code> is a <a href="https://github.com/typicode/json-server">javascript package</a> that provides a fake rest api server. It implements a server reading a simple json file and can be installed by typing <code>npm install json-server --save</code>.</p>
+
+<p>Here you can see the file where all information about our heroes are stored. This file is read by json-server so that we will be able to query it and receive those information in json format.</p>
+
+<pre><code class="language-json">{
+  &quot;heroes&quot;: [
+    {
+      &quot;id&quot;: 11,
+      &quot;name&quot;: &quot;Mr. Nice&quot;
+    },
+    {
+      &quot;id&quot;: 12,
+      &quot;name&quot;: &quot;Narco&quot;
+    },
+    {
+      &quot;id&quot;: 13,
+      &quot;name&quot;: &quot;Bombasto&quot;
+    },
+    {
+      &quot;id&quot;: 14,
+      &quot;name&quot;: &quot;Celeritas&quot;
+    },
+    {
+      &quot;id&quot;: 15,
+      &quot;name&quot;: &quot;Magneta&quot;
+    },
+    {
+      &quot;id&quot;: 16,
+      &quot;name&quot;: &quot;RubberMan&quot;
+    },
+    {
+      &quot;id&quot;: 17,
+      &quot;name&quot;: &quot;Dynama&quot;
+    },
+    {
+      &quot;id&quot;: 18,
+      &quot;name&quot;: &quot;Dr IQ&quot;
+    },
+    {
+      &quot;id&quot;: 19,
+      &quot;name&quot;: &quot;Magma&quot;
+    },
+    {
+      &quot;id&quot;: 20,
+      &quot;name&quot;: &quot;Tornado&quot;
+    }
+  ]
+}
+</code></pre>
+
+<p>In order to launch it we have to simply type <code>json-server --watch server/db.json</code> assuming that we have stored the file above named as db.json in a folder named server.</p>
+
+<h3 id="hello-server">Hello server!</h3>
+
+<p>Up to know we have only set all what was necessary to fetch data from a remote server. Now it&rsquo;s time to implement actual code.</p>
+
+<p>Elm doesn&rsquo;t have the http module installed by default. In order to install we have to install the <code>evancz/elm-http</code> package by typing <code>elm package install evancz/elm-http</code>.</p>
+
+<p>Let&rsquo;s jumps to the code and see how a GET request is performed:</p>
+
+<pre><code class="language-elm">getHeroes : Cmd Msg
+getHeroes =
+    let
+        url =
+            &quot;http://localhost:3000/heroes&quot;
+    in
+        Task.perform FetchFail FetchSucceed (Http.get decodeUrl url)
+</code></pre>
+
+<p>After installing json-server and running it, we can fetch Heroes list directly from the server. <code>getHeroes</code> does the asynchronous call using the Task module.</p>
+
+<p>As we sad earlier, commands are used to perform activities that involve side effects (like talking to a server for example). But commands are simply a description of the operation that have to be performed: a command have to be executed and one way to do it is by means of asynchronous operations that can succeed or fail. Tasks serve to this purpose and they are similar to promises in JavaScript. <code>Cmd</code> and <code>Task</code> are not easy to grasp at the beginning and you can refer to the <a href="http://package.elm-lang.org/packages/elm-lang/core/latest/Platform-Cmd">documentation</a> to have more info. Nevertheless it is easier to understand these concepts if first you see them in action.</p>
+
+<p><code>Task.perform</code> instructs the runtime system to perform a task. In the code above we specify in the first two positions the messages to pass to the runtime in case of failure or success of the asynchronous operation. Below you can see the definition of the two new messages <code>FetchFail</code> and <code>FetchSucceed</code>.</p>
+
+<pre><code class="language-elm">type Msg
+    = Change String
+    | Select Hero
+    | FetchFail Http.Error
+    | FetchSucceed (List Hero)
+</code></pre>
+
+<p>Finally the last argument it the task to be executed itself. <code>Http.get</code> takes as arguments a decoder function, to decode the received message, and a string containing the ulr where to perform the GET request. It then returns the task that <code>Task.perform</code> will execute. In our case <code>url</code> is pointing to localhost, port 3000, because this is the default port of json-server.</p>
+
+<p>In case of failure, a message of type <code>FetchFail</code> is passed to the application along with an error code. If we look at the documentation of the Http module, we can see <code>Http.Error</code> defined as:</p>
+
+<pre><code class="language-elm">type Error
+    = Timeout
+    | NetworkError
+    | UnexpectedPayload String
+    | BadResponse Int String
+</code></pre>
+
+<p>In case of success, a new List of Hero is passed as payload to the message <code>FetchSucceed</code>.</p>
+
+<p>Here <code>decodeUrl</code> is the function that transforms our json response into an Elm object. This is how we defined it:</p>
+
+<pre><code class="language-elm">decodeUrl : Json.Decoder (List Hero)
+decodeUrl =
+    let
+        hero =
+            Json.object2 (\id name -&gt; Hero id name)
+                (&quot;id&quot; := Json.int)
+                (&quot;name&quot; := Json.string)
+    in
+        Json.list hero
+</code></pre>
+
+<p>Our list of Heroes is made of Hero objects, so the first part of the function definition deals with the problem of decoding each element of the json array into a Hero object.</p>
+
+<p>Json module, imported at the beginning of the code, has all the ingredients to perform this operation. The trick to understand this piece of code is the fact that we are composing different decoders to form a more complex one.</p>
+
+<p>In the guide for Json module, <code>Json.Decoder</code> is defined as <code>type Decoder a</code>: this means that it is a parametric type. In our code we assigned the type <code>List Hero</code> to the parameter.</p>
+
+<p><code>Json.list</code> is the functions that decodes a javascript array into an Elm List using the decoder given as first argument: this will be the decoder used for every item in the array. In our case we defined above such decoder called <code>hero</code>.</p>
+
+<p>So let&rsquo;s move to analyze the first decoder. The story for <code>Json.object2</code> function is similar to the one we just saw. This is a decoder used to decode a json object with exactly two fields and that takes a function as first argument, and two more decoders. The latter are used to decode each field, while the function, given as first parameter, is used to build an Elm object from the decoded json object&rsquo;s elements.</p>
+
+<p><code>Json.int</code> and <code>Json.string</code> are two decoders that decode primitive json elements in primitive Elm types (<code>Int</code> and <code>String</code>). Finally the <code>:=</code> operator (defined by Json module) is used again to compose a Json decoder with a string and is used to decode the field names in a json object.</p>
+
+<p>Almost done!</p>
+
+<p>Let&rsquo;s now complete what is missing: the update function must take into account the two new messages that we have defined earlier.</p>
+
+<pre><code class="language-elm">        FetchFail _ -&gt;
+            model
+                ! [ Cmd.none ]
+
+        FetchSucceed heroes -&gt;
+            { model | heroes = heroes }
+                ! [ Cmd.none ]
+</code></pre>
+
+<p>In this example in case of failure we return the same model for simplicity. This is just a personal choice, but in production code it is likely that you want to change the model in order to display some error message to the user.</p>
+
+<p>In case of success, once a new list of Heroes has been retrieved, we simply use it to define the new model and display the retrieved data.</p>
+
+<p>Now that everything is set up, we need to trigger the initial call to the server by changing the initial command from <code>Cmd.none</code> to <code>getHeroes</code>. Here you can see the new init function:</p>
+
+<pre><code class="language-elm">init : ( Model, Cmd Msg )
+init =
+    initialModel ! [ getHeroes ]
+</code></pre>
+
+<p>And since we retrieve the list of heroes from the server, we do not need anymore to define this list in the code. Our initial model can use an empty list as initial value for the list of heroes:</p>
+
+<pre><code class="language-elm">initialModel : Model
+initialModel =
+    { selectedHeroId = Nothing, heroes = [] }
+</code></pre>
+
+<p>The complete code is available as usual in the <a href="https://github.com/tizpuppi/TourOfElm">github</a> repository in branch <code>03-FetchFromRemote</code>.</p>
+
+<h3 id="third-take-home-about-elm">Third take home about Elm</h3>
+
+<p>Type is your fiend! Really!!</p>
+
+<p>When I first started writing Elm code, I immediately felt in love with its type system: it is really there to help you to write correct code.</p>
+
+<p>Type system in Elm is very different from types in a typical strong typed language because types are inferred from the code: Elm compiler is able to deduce variables type by looking at how that variable is used. This also means that type annotation are not mandatory (but strongly suggested).</p>
+
+<p>This comes handy for example when coding with parametric types, like we did with Json Decoder. If we change <code>decodeUrl</code> function with:</p>
+
+<pre><code class="language-elm">decodeUrl : Json.Decoder (List Hero)
+decodeUrl =
+    let
+        hero =
+            Json.object2 (\id name -&gt; Hero id name)
+                (&quot;id&quot; := Json.string)
+                (&quot;name&quot; := Json.string)
+    in
+        Json.list hero
+</code></pre>
+
+<p>and try to compile, we see a compile error like this one:</p>
+
+<pre><code>-- TYPE MISMATCH ------- /TourOfElm/src/Update.elm
+
+The 2nd argument to function `object2` is causing a mismatch.
+
+86|             Json.object2 (\id name -&gt; Hero id name)
+87|&gt;                (&quot;id&quot; := Json.string)
+88|                 (&quot;name&quot; := Json.string)
+
+Function `object2` is expecting the 2nd argument to be:
+
+    Json.Decoder Int
+
+But it is:
+
+    Json.Decoder String
+
+Hint: I always figure out the type of arguments from left to right. If an
+argument is acceptable when I check it, I assume it is &quot;correct&quot; in subsequent
+checks. So the problem may actually be in how previous arguments interact with
+the 2nd.
+</code></pre>
+
+<p>As you can see, the compiler correctly deduced the type parameter used for Decoder of the <code>id</code> variable by knowing that the Hero constructor expects <code>id</code> to be of type <code>Int</code>.</p>
+
+<p>Note also how the error message is really human friendly and easy to understand compared to other languages. This is really a great feature that plays in favor of Elm language (and compiler) and it has been a clear obsession of Elm&rsquo;s &ldquo;father&rdquo; Evan Czaplicki.</p>
+
+<p>As he <a href="http://elm-lang.org/blog/compiler-errors-for-humans">once</a> said:</p>
+
+<blockquote>
+<blockquote>
+<p>Ease of use is a major priority in Elm, so I recently took a couple weeks to really focus on this. I learned that you can make a shockingly huge difference just by thinking about the user experience.</p>
+</blockquote>
+</blockquote>
+
+<p>Its very nice to see how a compiler can be written with the user in mind helping the developer with useful hints and giving finally the developer a tool that helps refactoring the code without introducing new bugs.</p>
+
+</div>
+
+        <footer class="post-footer clearfix">
+    
+        <p class="post-tags">
+            <span>Tagged:</span>
+            
+                 <a href="/tags/elm/">elm</a>
+            
+                 <a href="/tags/angular/">angular</a>
+            
+        </p>
+    
+
+    <div class="share">
+        <a class="icon-twitter" href="http://twitter.com/share?text=Tour%20Of%20Elm%20-%20Part%20Three&url=https%3a%2f%2ftizpuppi.github.io%2fblog%2ftour_of_elm-part_three%2f"
+            onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+            <i class="fa fa-twitter"></i>
+            <span class="hidden">Twitter</span>
+        </a>
+
+        <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https%3a%2f%2ftizpuppi.github.io%2fblog%2ftour_of_elm-part_three%2f"
+            onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+            <i class="fa fa-facebook"></i>
+            <span class="hidden">Facebook</span>
+        </a>
+
+        <a class="icon-google-plus" href="https://plus.google.com/share?url=https%3a%2f%2ftizpuppi.github.io%2fblog%2ftour_of_elm-part_three%2f"
+           onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+           <i class="fa fa-google-plus"></i>
+            <span class="hidden">Google+</span>
+        </a>
+    </div>
+</footer>
+
+        
+    </article>
+</div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="site-title-wrapper">
+                    <h1 class="site-title">
+                        <a title="tizpuppi" href="https://tizpuppi.github.io/">tizpuppi</a>
+                    </h1>
+                    <a class="button-square button-jump-top js-jump-top" href="#">
+                        <i class="fa fa-angle-up"></i>
+                    </a>
+                </div>
+
+                <p class="footer-copyright">
+                    <span>&copy; 2016 / Powered by <a href="http://gohugo.io/">Hugo</a></span>
+                </p>
+                <p class="footer-copyright">
+                    <span><a href="https://github.com/roryg/ghostwriter">Ghostwriter theme</a> By <a href="http://jollygoodthemes.com">JollyGoodThemes</a></span>
+                    <span>/ <a href="https://github.com/jbub/ghostwriter">Ported</a> to Hugo By <a href="https://github.com/jbub">jbub</a></span>
+                </p>
+            </div>
+        </footer>
+
+        <script src="https://tizpuppi.github.io/js/jquery-1.11.3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+        <script src="https://tizpuppi.github.io/js/jquery.fitvids.js"></script>
+        <script src="https://tizpuppi.github.io/js/scripts.js"></script>
+    </body>
+</html>
+

@@ -314,6 +314,8 @@ the 2nd.
       <guid>https://tizpuppi.github.io/blog/tour_of_elm-part_two/</guid>
       <description>
 
+&lt;p&gt;&lt;em&gt;Update 16 November 2016: Post updated for Elm version 0.18&lt;/em&gt;&lt;/p&gt;
+
 &lt;h1 id=&#34;angular-2-tutorial-in-elm-part-2&#34;&gt;Angular 2 Tutorial in Elm - Part 2&lt;/h1&gt;
 
 &lt;h3 id=&#34;let-s-scale-multiple-heroes&#34;&gt;Let&amp;rsquo;s scale: multiple heroes&lt;/h3&gt;

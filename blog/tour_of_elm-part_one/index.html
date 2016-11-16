@@ -96,6 +96,8 @@ ga('send', 'pageview');
 
     
 
+<p><em>Update 16 November 2016: Post updated for Elm version 0.18</em></p>
+
 <p>I Recently played with the <a href="http://elm-lang.org/">Elm</a> programming language and I really enjoyed its elegance and cleanness. Elm is a strongly typed functional language, largely inspired by Haskell, that compiles to javascript. Code written in Elm usually follows a simple pattern called <a href="https://guide.elm-lang.org/architecture/">Elm architecture</a> that helps to nicely structure your web application and that has inspired the Redux library for ReactJs.</p>
 
 <p>Having recently chosen Angular 2 as preferred front end framework at work, I was looking for a nice comparison between the two frameworks that could give me some insights about the different philosophies and approaches to web development. Eventually I could even be better equipped to argue in favor of a functional, not-mainstream language!</p>
@@ -108,7 +110,7 @@ ga('send', 'pageview');
 
 <h3 id="project-setup">Project setup.</h3>
 
-<p>I&rsquo;ve written this post and tested the code with version 0.17 of Elm and during this journey I will assume you have only a limited knowledge of the language. Previous exposure to Elm through the Elm tutorial will help to follow it. Anyway I will try to start gently so that even with limited knowledge you can have a global overview of the language.</p>
+<p>I&rsquo;ve written this post and tested the code with version 0.18 of Elm and during this journey I will assume you have only a limited knowledge of the language. Previous exposure to Elm through the Elm tutorial will help to follow it. Anyway I will try to start gently so that even with limited knowledge you can have a global overview of the language.</p>
 
 <p>This article assumes you have already installed node, npm package manager and Elm on your machine. If it&rsquo;s not the case you can give a look at <a href="https://nodejs.org/en/">nodejs</a> and <a href="http://elm-lang.org/">elm-lang</a> web sites.</p>
 
@@ -126,12 +128,11 @@ ga('send', 'pageview');
 
 import Html exposing (Html, div, h1, h2, label, input, text)
 import Html.Attributes exposing (placeholder, value)
-import Html.App as App
 
 
-main : Program Never
+main : Program Never Model Msg
 main =
-    App.beginnerProgram { model = model, view = view, update = update }
+    Html.beginnerProgram { model = model, view = view, update = update }
 
 
 type alias AppConfig =

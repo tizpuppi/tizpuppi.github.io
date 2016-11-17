@@ -96,6 +96,8 @@ ga('send', 'pageview');
 
     
 
+<p><em>Update 16 November 2016: Post updated for Elm version 0.18</em></p>
+
 <h1 id="angular-2-tutorial-in-elm-part-3">Angular 2 Tutorial in Elm - Part 3</h1>
 
 <h3 id="the-external-world">The external world</h3>
@@ -106,13 +108,13 @@ ga('send', 'pageview');
 
 <h3 id="let-s-grow-a-bit">Let&rsquo;s grow a bit</h3>
 
-<p>The main function, responsible for gluing the model, the view, and the update function (via the Elm Architecture pattern), is <code>beginnerProgram</code> from <code>Html.App</code> module. As its name suggests, this function is suitable for simple applications, that do not need to handle external communication.</p>
+<p>The main function, responsible for gluing the model, the view, and the update function (via the Elm Architecture pattern), is <code>beginnerProgram</code> from <code>Html</code> module. As its name suggests, this function is suitable for simple applications, that do not need to handle external communication.</p>
 
 <p>Operations that not only affects our model but that also send messages to the outside, or listen to incoming messages, make use of <code>Commands</code> and <code>Subscriptions</code>. In this tutorial we will not use subscriptions (those are especially useful for real-time communication using web sockets), but will use commands which in Elm have type <code>Cmd</code>.</p>
 
-<p>To integrate Commands and Subscriptions in our code, we have to extend the Elm Architecture pattern, using the gluing function <code>program</code>  also located in the <code>Html.App</code> module. Both <code>beginnerProgram</code> and <code>program</code> functions take a record as parameter but the latter is a bit more sophisticated: here a list of items <code>program</code> expects to receive as input:</p>
+<p>To integrate Commands and Subscriptions in our code, we have to extend the Elm Architecture pattern, using the gluing function <code>program</code>  also located in the <code>Html</code> module. Both <code>beginnerProgram</code> and <code>program</code> functions take a record as parameter but the latter is a bit more sophisticated: here a list of items <code>program</code> expects to receive as input:</p>
 
-<pre><code class="language-elm">App.program { init = init, view = view, update = update, subscriptions = subscriptions }
+<pre><code class="language-elm">Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
 </code></pre>
 
 <ul>
@@ -134,12 +136,12 @@ subscriptions : Model -&gt; Sub Msg
 
 <p>As usual I will refer to my <a href="https://github.com/tizpuppi/TourOfElm">github</a> repository, building from where we left in the previous post (branch 02-HeroList). I will show here the changes in order to upgrade from beginnerProgram to Program:</p>
 
-<pre><code class="language-elm">App.beginnerProgram { model = initialModel, view = view, update = update }
+<pre><code class="language-elm">Html.beginnerProgram { model = initialModel, view = view, update = update }
 </code></pre>
 
 <p>becomes</p>
 
-<pre><code class="language-elm">App.program { init = init, view = view, update = update, subscriptions = subscriptions }
+<pre><code class="language-elm">Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
 </code></pre>
 
 <p>This is the new init function:</p>
@@ -227,7 +229,7 @@ subscriptions model =
 
 <p>Up to know we have only set all what was necessary to fetch data from a remote server. Now it&rsquo;s time to implement actual code.</p>
 
-<p>Elm doesn&rsquo;t have the http module installed by default. In order to install we have to install the <code>evancz/elm-http</code> package by typing <code>elm package install evancz/elm-http</code>.</p>
+<p>Elm doesn&rsquo;t have the http module installed by default. In order to install we have to install the <code>http</code> package by typing <code>elm package install elm-lang/http</code>.</p>
 
 <p>Let&rsquo;s jumps to the code and see how a GET request is performed:</p>
 
@@ -236,26 +238,41 @@ getHeroes =
     let
         url =
             &quot;http://localhost:3000/heroes&quot;
+
+        request =
+            Http.get url decodeHeroes
     in
-        Task.perform FetchFail FetchSucceed (Http.get decodeUrl url)
+        Http.send FetchedHeroes request
 </code></pre>
 
-<p>After installing json-server and running it, we can fetch Heroes list directly from the server. <code>getHeroes</code> does the asynchronous call using the Task module.</p>
+<p>After installing json-server and running it, we can fetch Heroes list directly from the server. <code>getHeroes</code> does the http request call using the Task module.</p>
 
-<p>As we sad earlier, commands are used to perform activities that involve side effects (like talking to a server for example). But commands are simply a description of the operation that have to be performed: a command have to be executed and one way to do it is by means of asynchronous operations that can succeed or fail. Tasks serve to this purpose and they are similar to promises in JavaScript. <code>Cmd</code> and <code>Task</code> are not easy to grasp at the beginning and you can refer to the <a href="http://package.elm-lang.org/packages/elm-lang/core/latest/Platform-Cmd">documentation</a> to have more info. Nevertheless it is easier to understand these concepts if first you see them in action.</p>
+<p>As we sad earlier, commands are used to perform activities that involve side effects (like talking to a server for example). But commands are simply a description of the operation that have to be performed: a command have to be executed by the runtime. This means that the result of the command will be handled using a message asynchronously.</p>
 
-<p><code>Task.perform</code> instructs the runtime system to perform a task. In the code above we specify in the first two positions the messages to pass to the runtime in case of failure or success of the asynchronous operation. Below you can see the definition of the two new messages <code>FetchFail</code> and <code>FetchSucceed</code>.</p>
+<p>The command to send an http request is made as following: first we define a url as a String. Next we create a request using <code>Http.get url decodeHeroes</code>. <code>Http.get</code> has following type: <code>Http.get : String -&gt; Json.Decoder a -&gt; Http.Request a</code>. First argument is the url that we have just defined, and the second is a decoder function that is a function used to decode (i.e. understand and transform) a json string into a type specified by the decoder (we wil define it later). The return type is an Http request ready to be passed to the runtime by Http.send function.</p>
+
+<p>Since we are decoding a json consisting in a list of Heroes, our decoder function and request types will be parametrized on <code>List Hero</code> type. That means that <code>decodeHeroes</code> will return a request of type <code>Http.Request (List Hero)</code>.</p>
+
+<p>Finally we use <code>Http.send FetchedHeroes request</code> to actually create a <code>Cmd</code> to be passed to the runtime that will actually send the http request to the specified url.</p>
+
+<p><code>FetchedHeroes</code> is the Msg constructor that will be passed once the http request returns. This type has following payload:</p>
+
+<pre><code class="language-elm">FetchedHeroes (Result Http.Error a)
+</code></pre>
+
+<p>where <code>a</code> is the type parameter that depends on the type returned by the decoder function (in our example <code>List Hero</code>).</p>
+
+<p>Let&rsquo;s add this Msg constructor in the list of application messages.</p>
 
 <pre><code class="language-elm">type Msg
     = Change String
     | Select Hero
-    | FetchFail Http.Error
-    | FetchSucceed (List Hero)
+    | FetchedHeroes (Result Http.Error (List Hero))
 </code></pre>
 
-<p>Finally the last argument it the task to be executed itself. <code>Http.get</code> takes as arguments a decoder function, to decode the received message, and a string containing the ulr where to perform the GET request. It then returns the task that <code>Task.perform</code> will execute. In our case <code>url</code> is pointing to localhost, port 3000, because this is the default port of json-server.</p>
+<p>When the http request comes back, it can have a positive answer (a json string containing the hero list) or a negative one (http error). <code>Result a b</code> type is similar to <code>Maybe a</code> because it is a container that can be used to describe something that can be wrong.</p>
 
-<p>In case of failure, a message of type <code>FetchFail</code> is passed to the application along with an error code. If we look at the documentation of the Http module, we can see <code>Http.Error</code> defined as:</p>
+<p>In this example <code>Result</code> can contain either an error type of &ldquo;type&rdquo; <code>Http.Error</code> or a correct answer of type <code>(List Hero)</code>. In case of failure, a message of type <code>FetchedHeroes (Err error)</code> is passed to the application along with an error code. If we look at the documentation of the Http module, we can see <code>Http.Error</code> defined as:</p>
 
 <pre><code class="language-elm">type Error
     = Timeout
@@ -264,42 +281,40 @@ getHeroes =
     | BadResponse Int String
 </code></pre>
 
-<p>In case of success, a new List of Hero is passed as payload to the message <code>FetchSucceed</code>.</p>
+<p>In case of success, a new List of Hero is passed as payload to the message <code>FetchedHeroes (Ok heroes)</code>.</p>
 
-<p>Here <code>decodeUrl</code> is the function that transforms our json response into an Elm object. This is how we defined it:</p>
+<p>Let&rsquo;s look now at how to decode a json string in a list of heroes. Here <code>decodeHeroes</code> is the function that transforms our json response into an Elm object. This is how we defined it:</p>
 
-<pre><code class="language-elm">decodeUrl : Json.Decoder (List Hero)
-decodeUrl =
-    let
-        hero =
-            Json.object2 (\id name -&gt; Hero id name)
-                (&quot;id&quot; := Json.int)
-                (&quot;name&quot; := Json.string)
-    in
-        Json.list hero
+<pre><code class="language-elm">decodeHeroes : Json.Decoder (List Hero)
+decodeHeroes =
+    let 
+        heroDecoder =
+            Json.map2 Hero (Json.field &quot;id&quot; Json.int) (Json.field &quot;name&quot; Json.string)
+    in  
+        Json.list heroDecoder
 </code></pre>
 
 <p>Our list of Heroes is made of Hero objects, so the first part of the function definition deals with the problem of decoding each element of the json array into a Hero object.</p>
 
-<p>Json module, imported at the beginning of the code, has all the ingredients to perform this operation. The trick to understand this piece of code is the fact that we are composing different decoders to form a more complex one.</p>
+<p>Json.Decode module, imported at the beginning of the code, has all the ingredients to perform this operation. The trick to understand this piece of code is the fact that we are composing different decoders to form a more complex one.</p>
 
 <p>In the guide for Json module, <code>Json.Decoder</code> is defined as <code>type Decoder a</code>: this means that it is a parametric type. In our code we assigned the type <code>List Hero</code> to the parameter.</p>
 
-<p><code>Json.list</code> is the functions that decodes a javascript array into an Elm List using the decoder given as first argument: this will be the decoder used for every item in the array. In our case we defined above such decoder called <code>hero</code>.</p>
+<p><code>Json.list</code> is the functions that decodes a javascript array into an Elm List using the decoder given as first argument: this will be the decoder used for every item in the array. In our case we defined above such decoder called <code>heroDecoder</code>.</p>
 
-<p>So let&rsquo;s move to analyze the first decoder. The story for <code>Json.object2</code> function is similar to the one we just saw. This is a decoder used to decode a json object with exactly two fields and that takes a function as first argument, and two more decoders. The latter are used to decode each field, while the function, given as first parameter, is used to build an Elm object from the decoded json object&rsquo;s elements.</p>
+<p>So let&rsquo;s move to analyze the first decoder. Starting from inside out, the two expression within parenthesis <code>(Json.field &quot;id&quot; Json.int)</code> and <code>(Json.field &quot;name&quot; Json.string)</code> are decoders to extract the value from an object at a specific field. <code>Json.field</code> is the key function that takes a sting and a decoder. It is easier to understand this function if we see it in action: take <code>Json.decodeString (Json.field &quot;x&quot; Json.int) &quot;{ \&quot;x\&quot;: 3 }&quot;</code>. We can read it as: we have an <code>Json.int</code> decoder applied to the value of field <code>&quot;x&quot;</code> for object <code>&quot;{\&quot;x\&quot;: 3}&quot;</code>. <code>Json.decodeString</code> applies the field decoder to the json string passed as second argument and returns an int value, 3 in this example. <code>Json.int</code> and <code>Json.string</code> are two decoders that decode primitive json elements in primitive Elm types (<code>Int</code> and <code>String</code>).</p>
 
-<p><code>Json.int</code> and <code>Json.string</code> are two decoders that decode primitive json elements in primitive Elm types (<code>Int</code> and <code>String</code>). Finally the <code>:=</code> operator (defined by Json module) is used again to compose a Json decoder with a string and is used to decode the field names in a json object.</p>
+<p>Once we have the fundamental decoder for every fields on the json object that represents ou hero, we map those two decoder to the <code>Hero</code> constructor to have the Hero decoder. <code>Json.map2</code> is transforming two decoders in a third one, applying the results from those two to a type constructor.</p>
 
 <p>Almost done!</p>
 
-<p>Let&rsquo;s now complete what is missing: the update function must take into account the two new messages that we have defined earlier.</p>
+<p>Let&rsquo;s now complete what is missing: the update function must take into account the new message that we have defined earlier (considering both constructor from <code>Result</code> type).</p>
 
-<pre><code class="language-elm">        FetchFail _ -&gt;
+<pre><code class="language-elm">        FetchedHeroes (Err _) -&gt;
             model
                 ! [ Cmd.none ]
 
-        FetchSucceed heroes -&gt;
+        FetchedHeroes (Ok heroes) -&gt;
             { model | heroes = heroes }
                 ! [ Cmd.none ]
 </code></pre>
@@ -332,30 +347,26 @@ initialModel =
 
 <p>Type system in Elm is very different from types in a typical strong typed language because types are inferred from the code: Elm compiler is able to deduce variables type by looking at how that variable is used. This also means that type annotation are not mandatory (but strongly suggested).</p>
 
-<p>This comes handy for example when coding with parametric types, like we did with Json Decoder. If we change <code>decodeUrl</code> function with:</p>
+<p>This comes handy for example when coding with parametric types, like we did with Json Decoder. If we change <code>decodeHeroes</code> function with:</p>
 
-<pre><code class="language-elm">decodeUrl : Json.Decoder (List Hero)
-decodeUrl =
-    let
-        hero =
-            Json.object2 (\id name -&gt; Hero id name)
-                (&quot;id&quot; := Json.string)
-                (&quot;name&quot; := Json.string)
-    in
-        Json.list hero
+<pre><code class="language-elm">decodeHeroes : Json.Decoder (List Hero)
+decodeHeroes =
+    let 
+        heroDecoder =
+            map2 Hero (field &quot;id&quot; string) (field &quot;name&quot; string)
+    in  
+        Json.list heroDecoder
 </code></pre>
 
 <p>and try to compile, we see a compile error like this one:</p>
 
-<pre><code>-- TYPE MISMATCH ------- /TourOfElm/src/Update.elm
+<pre><code>-- TYPE MISMATCH --------- /TourOfElm/src/Main.elm
 
-The 2nd argument to function `object2` is causing a mismatch.
+The 2nd argument to function `map2` is causing a mismatch.
 
-86|             Json.object2 (\id name -&gt; Hero id name)
-87|&gt;                (&quot;id&quot; := Json.string)
-88|                 (&quot;name&quot; := Json.string)
-
-Function `object2` is expecting the 2nd argument to be:
+102|             map2 Hero (field &quot;id&quot; string) (field &quot;name&quot; string)
+                            ^^^^^^^^^^^^^^^^^
+Function `map2` is expecting the 2nd argument to be:
 
     Json.Decoder Int
 
@@ -369,9 +380,9 @@ checks. So the problem may actually be in how previous arguments interact with
 the 2nd.
 </code></pre>
 
-<p>As you can see, the compiler correctly deduced the type parameter used for Decoder of the <code>id</code> variable by knowing that the Hero constructor expects <code>id</code> to be of type <code>Int</code>.</p>
+<p>As you can see, the compiler correctly deduced the type parameter used for Decoder of the <code>id</code> field by knowing that the Hero constructor expects the first argument to be of type <code>Int</code>.</p>
 
-<p>Note also how the error message is really human friendly and easy to understand compared to other languages. This is really a great feature that plays in favor of Elm language (and compiler) and it has been a clear obsession of Elm&rsquo;s &ldquo;father&rdquo; Evan Czaplicki.</p>
+<p>Note also how the error message is really human friendly and easy to understand compared to other languages. This is really a great feature that plays in favor of Elm language and it has literally been an obsession of Elm&rsquo;s &ldquo;father&rdquo; Evan Czaplicki.</p>
 
 <p>As he <a href="http://elm-lang.org/blog/compiler-errors-for-humans">once</a> said:</p>
 

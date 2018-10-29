@@ -1,0 +1,26 @@
+/* This file is for your main application css. */
+
+@page {
+  size: 21cm 29.7cm;
+}
+
+.page {
+  width: 21cm;
+  height: 29.7cm;
+}
+
+.ibm {
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.accent {
+  color: #3AAFA9;
+}
+
+.bg-accent {
+  background-color: #3AAFA9;
+}
+
+.b--accent {
+  border-color: #3AAFA9;
+}
